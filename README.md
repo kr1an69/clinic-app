@@ -2,8 +2,6 @@
 
 Dự án đồ án môn Lập trình .NET (Nhóm 2 - 3 thành viên), xây dựng theo kiến trúc **MVC** kết hợp cơ sở dữ liệu **SQLite** và **Dapper** trên nền tảng **.NET 10 (`net10.0-windows`)**.
 
-👉 **Xem chi tiết yêu cầu đồ án, phân chia công việc 3 thành viên và quy tắc Git tại:** [`CONTEXT.md`](./CONTEXT.md)
-
 ---
 
 ## 🚀 Cách Mở & Chạy Dự Án
