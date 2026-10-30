@@ -7,7 +7,7 @@ namespace ClinicManagement.Data
 {
     public static class DbContext
     {
-        private static readonly string DbFileName = "clinic.db";
+        private const string DbFileName = "clinic.db";
         public static string ConnectionString => $"Data Source={Path.Combine(AppDomain.CurrentDomain.BaseDirectory, DbFileName)};Version=3;";
 
         public static SQLiteConnection GetConnection()
