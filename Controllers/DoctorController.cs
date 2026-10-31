@@ -34,9 +34,15 @@ namespace ClinicManagement.Controllers
             return conn.Query<QueueItem>(sql).ToList();
         }
 
-        // TODO (Thành viên 2): Cập nhật trạng thái hàng đợi sang 'Examining' khi bác sĩ gọi khám
+        //Cập nhật trạng thái hàng đợi sang 'Examining' khi bác sĩ gọi khám
         public void CallPatient(int queueId)
         {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                UPDATE Queues
+                SET Status = 'Examining'
+                WHERE QueueId = @queueId;";
+            conn.Execute(sql, new { QueueID = queueId });
         }
 
         // TODO (Thành viên 2): Lấy danh sách thuốc còn tồn kho (StockQuantity > 0) để gợi ý AutoComplete
