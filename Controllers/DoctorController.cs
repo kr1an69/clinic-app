@@ -12,10 +12,26 @@ namespace ClinicManagement.Controllers
     /// </summary>
     public class DoctorController
     {
-        // TODO (Thành viên 2): Lấy danh sách bệnh nhân đang chờ khám (Status = 'Waiting') theo số thứ tự
+        // Lấy danh sách bệnh nhân đang chờ khám (Status = 'Waiting') theo số thứ tự
         public List<QueueItem> GetPatientsWaitingForDoctor()
         {
-            return new List<QueueItem>();
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT 
+                    q.Id,
+                    q.PatientId,
+                    q.QueueNumber,
+                    q.QueueDate,
+                    q.Status,
+                    q.CreatedAt,
+                    p.FullName AS PatientName,
+                    p.Phone
+                FROM Queues q
+                INNER JOIN Patients p ON q.PatientId = p.Id
+                WHERE q.QueueDate = date('now')
+                  AND q.Status IN ('Waiting', 'Examining')
+                ORDER BY q.QueueNumber ASC;";
+            return conn.Query<QueueItem>(sql).ToList();
         }
 
         // TODO (Thành viên 2): Cập nhật trạng thái hàng đợi sang 'Examining' khi bác sĩ gọi khám
