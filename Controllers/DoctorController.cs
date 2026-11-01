@@ -58,8 +58,14 @@ namespace ClinicManagement.Controllers
         //Kiểm tra tồn kho thuốc xem có đủ số lượng bác sĩ kê hay không
         public bool CheckMedicineStock(int medicineId, int requestedQty, out int currentStock)
         {
-            currentStock = 0;
-            return false;
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT StockQuantity 
+                FROM Medicines 
+                WHERE Id = @MedicineId;";
+            // Lấy số lượng tồn kho hiện tại (nếu không tìm thấy thuốc thì mặc định là 0)
+            currentStock = conn.ExecuteScalar<int?>(sql, new { MedicineId = medicineId }) ?? 0;
+            return requestedQty > 0 && currentStock >= requestedQty;
         }
 
         //Lưu bệnh án (MedicalRecords), đơn thuốc (Prescriptions) và chi tiết thuốc (PrescriptionDetails) bằng Transaction
