@@ -7,38 +7,40 @@ using ClinicManagement.Models;
 
 namespace ClinicManagement.Controllers
 {
-    /// <summary>
-    /// PHÂN HỆ 3: THU PHÍ, XUẤT THUỐC, IN ĐƠN & BÁO CÁO KHO DƯỢC (Thành viên 3 phụ trách)
-    /// </summary>
     public class PharmacyController
     {
-        // TODO (Thành viên 3): Lấy toàn bộ danh mục thuốc trong kho
+        // Lấy danh sách toàn bộ thuốc trong kho
         public List<Medicine> GetAllMedicines()
         {
-            return new List<Medicine>();
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT Id, Code, Name, Unit, UnitPrice, StockQuantity, MinStockAlert, ExpiryDate
+                FROM Medicines
+                ORDER BY Name ASC;";
+            return conn.Query<Medicine>(sql).ToList();
         }
 
-        // TODO (Thành viên 3): Thêm thuốc mới vào kho
+        // Thêm thuốc mới vào kho
         public void AddMedicine(Medicine medicine)
         {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                INSERT INTO Medicines (Code, Name, Unit, UnitPrice, StockQuantity, MinStockAlert, ExpiryDate)
+                VALUES (@Code, @Name, @Unit, @UnitPrice, @StockQuantity, @MinStockAlert, @ExpiryDate);";
+            conn.Execute(sql, medicine);
         }
 
-        // TODO (Thành viên 3): Báo cáo các loại thuốc sắp hết hạn sử dụng hoặc sắp hết hàng trong kho
+        // Lấy danh sách thuốc sắp hết hàng hoặc cận date (<= 60 ngày)
         public List<Medicine> GetAlertMedicines()
         {
-            return new List<Medicine>();
-        }
-
-        // TODO (Thành viên 3): Lấy danh sách đơn thuốc đang chờ thu phí & xuất thuốc (IsDispensed = 0)
-        public List<dynamic> GetPendingPrescriptions()
-        {
-            return new List<dynamic>();
-        }
-
-        // TODO (Thành viên 3): Thu phí + Xuất thuốc tự động trừ số lượng tồn kho tương ứng (dùng SQLiteTransaction)
-        public bool ProcessPaymentAndDispense(int prescriptionId, int cashierId)
-        {
-            return false;
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT Id, Code, Name, Unit, UnitPrice, StockQuantity, MinStockAlert, ExpiryDate
+                FROM Medicines
+                WHERE StockQuantity <= MinStockAlert 
+                   OR (ExpiryDate IS NOT NULL AND date(ExpiryDate) <= date('now', '+60 day'))
+                ORDER BY StockQuantity ASC, ExpiryDate ASC;";
+            return conn.Query<Medicine>(sql).ToList();
         }
     }
 }
