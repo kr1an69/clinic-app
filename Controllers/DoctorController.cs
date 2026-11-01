@@ -7,9 +7,7 @@ using ClinicManagement.Models;
 
 namespace ClinicManagement.Controllers
 {
-    /// <summary>
-    /// PHÂN HỆ 2: BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC (Thành viên 2 phụ trách)
-    /// </summary>
+    //BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC
     public class DoctorController
     {
         // Lấy danh sách bệnh nhân đang chờ khám (Status = 'Waiting') theo số thứ tự
@@ -41,24 +39,30 @@ namespace ClinicManagement.Controllers
             const string sql = @"
                 UPDATE Queues
                 SET Status = 'Examining'
-                WHERE QueueId = @queueId;";
+               WHERE Id = @QueueId;";
             conn.Execute(sql, new { QueueID = queueId });
         }
 
-        // TODO (Thành viên 2): Lấy danh sách thuốc còn tồn kho (StockQuantity > 0) để gợi ý AutoComplete
+        //Lấy danh sách thuốc còn tồn kho (StockQuantity > 0) để gợi ý AutoComplete
         public List<Medicine> GetAllMedicinesForPrescription()
         {
-            return new List<Medicine>();
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT Id, Code, Name, Unit, UnitPrice, StockQuantity, MinStockAlert, ExpiryDate 
+                FROM Medicines
+                WHERE StockQuantity  >0 
+                ORDER BY Name ASC;";
+            return conn.Query<Medicine>(sql).ToList();
         }
 
-        // TODO (Thành viên 2): Kiểm tra tồn kho thuốc xem có đủ số lượng bác sĩ kê hay không
+        //Kiểm tra tồn kho thuốc xem có đủ số lượng bác sĩ kê hay không
         public bool CheckMedicineStock(int medicineId, int requestedQty, out int currentStock)
         {
             currentStock = 0;
             return false;
         }
 
-        // TODO (Thành viên 2): Lưu bệnh án (MedicalRecords), đơn thuốc (Prescriptions) và chi tiết thuốc (PrescriptionDetails) bằng Transaction
+        //Lưu bệnh án (MedicalRecords), đơn thuốc (Prescriptions) và chi tiết thuốc (PrescriptionDetails) bằng Transaction
         public int SaveMedicalRecordAndPrescription(MedicalRecord record, List<PrescriptionDetail> details)
         {
             return 0;
