@@ -15,7 +15,7 @@ namespace ClinicManagement.Controllers
         {
             using var conn = DbContext.GetConnection();
             const string sql = @"
-                 SELECT Id, FullName, Phone, Gender, BirthDate, Address, CreatedAt
+                 SELECT Id, FullName, Phone, Gender, BirthYear, Address, CreatedAt
                  FROM Patients
                  ORDER BY Id DESC";
             return conn.Query<Patient>(sql).ToList();
@@ -30,7 +30,7 @@ namespace ClinicManagement.Controllers
             }
             using var conn = DbContext.GetConnection();
             const string sql = @"
-                 SELECT Id, FullName, Phone, Gender, BirthDate, Address, CreatedAt
+                 SELECT Id, FullName, Phone, Gender, BirthYear, Address, CreatedAt
                  FROM Patients
                  WHERE FullName LIKE @kw OR Phone LIKE @kw
                  ORDER BY Id DESC";
@@ -42,8 +42,8 @@ namespace ClinicManagement.Controllers
         {
             using var conn = DbContext.GetConnection();
             const string sql = @"
-                 INSERT INTO Patients (FullName, Phone, Gender, BirthDate, Address, CreatedAt)
-                 VALUES (@FullName, @Phone, @Gender, @BirthDate, @Address, @CreatedAt)
+                 INSERT INTO Patients (FullName, Phone, Gender, BirthYear, Address, CreatedAt)
+                 VALUES (@FullName, @Phone, @Gender, @BirthYear, @Address, @CreatedAt);
                  SELECT last_insert_rowid();";
             return conn.ExecuteScalar<int>(sql, patient);
         }
@@ -56,7 +56,7 @@ namespace ClinicManagement.Controllers
             // Lấy STT lớn nhất trong ngày
             const string sqlGetMax = @"
                  SELECT IFNULL(MAX(QueueNumber), 0)
-                 FROM Patients
+                 FROM Queues 
                  WHERE QueueDate = @QueueDate";
             int maxNumber = conn.ExecuteScalar<int>(sqlGetMax, new { QueueDate = today });
             int nextNumber = maxNumber + 1;
