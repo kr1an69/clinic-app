@@ -21,7 +21,7 @@ out/
 !.vscode/launch.json
 !.vscode/extensions.json
 
-## Database files generated at runtime (Tránh đè DB của nhau khi commit)
+## Database files generated at runtime
 *.db
 *.db-shm
 *.db-wal
@@ -34,6 +34,7 @@ Desktop.ini
 $RECYCLE.BIN/
 .DS_Store
 
-## Markdown files
+## Markdown files - html
 *.md
 !README.md
+*.html
