@@ -71,7 +71,72 @@ namespace ClinicManagement.Controllers
         //Lưu bệnh án (MedicalRecords), đơn thuốc (Prescriptions) và chi tiết thuốc (PrescriptionDetails) bằng Transaction
         public int SaveMedicalRecordAndPrescription(MedicalRecord record, List<PrescriptionDetail> details)
         {
-            return 0;
+            using var conn = DbContext.GetConnection();
+            using var transaction = conn.BeginTransaction();
+            try
+            {
+                //Thêm mới Hồ sơ bệnh án (MedicalRecords) và lấy Id vừa tạo
+                const string insertRecordSql = @"
+                    INSERT INTO MedicalRecords (PatientId, DoctorId, QueueId, Symptoms, Diagnosis, ExamFee)
+                    VALUES (@PatientId, @DoctorId, @QueueId, @Symptoms, @Diagnosis, @ExamFee);
+                    SELECT last_insert_rowid();";
+                int medicalRecordId = conn.ExecuteScalar<int>(insertRecordSql, new
+                {
+                    record.PatientId,
+                    DoctorId = record.DoctorId ?? 3, // Mặc định ID=3 là Bác sĩ trong seed data nếu chưa truyền
+                    record.QueueId,
+                    record.Symptoms,
+                    record.Diagnosis,
+                    ExamFee = record.ExamFee > 0 ? record.ExamFee : 50000
+                }, transaction);
+                //Nếu có kê đơn thuốc thì lưu bảng Prescriptions và PrescriptionDetails
+                if (details != null && details.Count > 0)
+                {
+                    double totalMedicineAmount = details.Sum(d => d.Quantity * d.UnitPrice);
+                    const string insertPrescriptionSql = @"
+                        INSERT INTO Prescriptions (MedicalRecordId, TotalAmount, IsDispensed)
+                        VALUES (@MedicalRecordId, @TotalAmount, 0);
+                        SELECT last_insert_rowid();";
+                    int prescriptionId = conn.ExecuteScalar<int>(insertPrescriptionSql, new
+                    {
+                        MedicalRecordId = medicalRecordId,
+                        TotalAmount = totalMedicineAmount
+                    }, transaction);
+                    const string insertDetailSql = @"
+                        INSERT INTO PrescriptionDetails (PrescriptionId, MedicineId, Quantity, Dosage, UnitPrice)
+                        VALUES (@PrescriptionId, @MedicineId, @Quantity, @Dosage, @UnitPrice);";
+                    foreach (var item in details)
+                    {
+                        conn.Execute(insertDetailSql, new
+                        {
+                            PrescriptionId = prescriptionId,
+                            item.MedicineId,
+                            item.Quantity,
+                            item.Dosage,
+                            item.UnitPrice
+                        }, transaction);
+                    }
+                }
+
+                //Cập nhật trạng thái hàng đợi sang 'PendingPayment' (Chờ thu ngân thanh toán & phát thuốc)
+                if (record.QueueId.HasValue && record.QueueId.Value > 0)
+                {
+                    const string updateQueueSql = @"
+                        UPDATE Queues 
+                        SET Status = 'PendingPayment' 
+                        WHERE Id = @QueueId;";
+                    conn.Execute(updateQueueSql, new { QueueId = record.QueueId.Value }, transaction);
+                }
+                // Xác nhận lưu toàn bộ vào CSDL
+                transaction.Commit();
+                return medicalRecordId;
+            }
+            catch
+            {
+                // Nếu có bất kỳ lỗi nào xảy ra thì hoàn tác toàn bộ
+                transaction.Rollback();
+                throw;
+            }
         }
     }
 }
