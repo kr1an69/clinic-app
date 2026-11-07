@@ -127,6 +127,7 @@ namespace ClinicManagement.Controllers
                         WHERE Id = @QueueId;";
                     conn.Execute(updateQueueSql, new { QueueId = record.QueueId.Value }, transaction);
                 }
+
                 // Xác nhận lưu toàn bộ vào CSDL
                 transaction.Commit();
                 return medicalRecordId;
@@ -139,6 +140,7 @@ namespace ClinicManagement.Controllers
             }
         }
 
+        //Hủy lượt khám / Đánh dấu vắng mặt (Status = 'Cancelled')
         public void CancelPatientQueue(int queueId)
         {
             using var conn = DbContext.GetConnection();
@@ -147,6 +149,34 @@ namespace ClinicManagement.Controllers
                 SET Status = 'Cancelled'
                 WHERE Id = @QueueId;";
             conn.Execute(spl, new { QueueId = queueId });
+        }
+
+        //Tra cứu lịch sử khám & hồ sơ bệnh án theo Tên hoặc SĐT bệnh nhân
+        public List<dynamic> GetMedicalRecordsHistory(string keyword = "")
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT 
+                    mr.Id,
+                    'BA-' || printf('%03d', mr.Id) AS RecordCode,
+                    mr.PatientId,
+                    p.FullName AS PatientName,
+                    p.Phone,
+                    p.Gender,
+                    p.BirthYear,
+                    mr.Symptoms,
+                    mr.Diagnosis,
+                    mr.ExamFee,
+                    mr.CreatedAt,
+                    COALESCE(u.FullName, 'BS.CKI Nguyễn Văn An') AS DoctorName
+                FROM MedicalRecords mr
+                INNER JOIN Patients p ON mr.PatientId = p.Id
+                LEFT JOIN Users u ON mr.DoctorId = u.Id
+                WHERE (@Keyword = '' 
+                       OR p.FullName LIKE '%' || @Keyword || '%' 
+                       OR p.Phone LIKE '%' || @Keyword || '%')
+                ORDER BY mr.Id DESC;";
+            return conn.Query<dynamic>(sql, new { Keyword = keyword.Trim() }).ToList();
         }
     }
 }
