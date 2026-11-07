@@ -203,5 +203,24 @@ namespace ClinicManagement.Controllers
                 ORDER BY pr.Id DESC;";
             return conn.Query<dynamic>(sql, new { Keyword = keyword.Trim() }).ToList();
         }
+        //Lấy chi tiết các loại thuốc trong 1 đơn thuốc cụ thể (Detail)
+        public List<PrescriptionDetail> GetPrescriptionDetailsById(int prescriptionId)
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT 
+                    pd.Id,
+                    pd.PrescriptionId,
+                    pd.MedicineId,
+                    m.Name AS MedicineName,
+                    pd.Quantity,
+                    pd.Dosage,
+                    pd.UnitPrice
+                FROM PrescriptionDetails pd
+                INNER JOIN Medicines m ON pd.MedicineId = m.Id
+                WHERE pd.PrescriptionId = @PrescriptionId
+                ORDER BY pd.Id ASC;";
+            return conn.Query<PrescriptionDetail>(sql, new { PrescriptionId = prescriptionId }).ToList();
+        }
     }
 }
