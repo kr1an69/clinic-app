@@ -138,5 +138,15 @@ namespace ClinicManagement.Controllers
                 throw;
             }
         }
+
+        public void CancelPatientQueue(int queueId)
+        {
+            using var conn = DbContext.GetConnection();
+            const string spl = @"
+                UPDATE Queues
+                SET Status = 'Cancelled'
+                WHERE Id = @QueueId;";
+            conn.Execute(spl, new { QueueId = queueId });
+        }
     }
 }
