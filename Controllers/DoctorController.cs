@@ -178,5 +178,30 @@ namespace ClinicManagement.Controllers
                 ORDER BY mr.Id DESC;";
             return conn.Query<dynamic>(sql, new { Keyword = keyword.Trim() }).ToList();
         }
+        //Lấy danh sách các đơn thuốc đã kê (Master)
+        public List<dynamic> GetAllPrescriptions(string keyword = "")
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT 
+                    pr.Id,
+                    'DT-' || printf('%03d', pr.Id) AS PrescriptionCode,
+                    pr.MedicalRecordId,
+                    p.FullName AS PatientName,
+                    p.Phone,
+                    mr.Diagnosis,
+                    pr.TotalAmount,
+                    pr.IsDispensed,
+                    CASE WHEN pr.IsDispensed = 1 THEN 'Đã xuất thuốc' ELSE 'Chờ thu phí' END AS DispensedStatus,
+                    pr.CreatedAt
+                FROM Prescriptions pr
+                INNER JOIN MedicalRecords mr ON pr.MedicalRecordId = mr.Id
+                INNER JOIN Patients p ON mr.PatientId = p.Id
+                WHERE (@Keyword = '' 
+                       OR p.FullName LIKE '%' || @Keyword || '%' 
+                       OR mr.Diagnosis LIKE '%' || @Keyword || '%')
+                ORDER BY pr.Id DESC;";
+            return conn.Query<dynamic>(sql, new { Keyword = keyword.Trim() }).ToList();
+        }
     }
 }
