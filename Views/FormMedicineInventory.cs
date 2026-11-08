@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -347,11 +347,25 @@ namespace ClinicManagement.Views
         // Mở màn hình thêm thuốc mới & nhập bổ sung tồn kho (#14)
         private void BtnOpenEditor_Click(object? sender, EventArgs e)
         {
-            MessageBox.Show(
-                "Màn hình Thêm thuốc mới & Nhập kho (#14 - FormMedicineEditor) sẽ được kết nối ở Commit 1.3.",
-                "Thông báo",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            int? selectedMedicineId = null;
+            if (_dgvMedicines.SelectedRows.Count > 0)
+            {
+                var row = _dgvMedicines.SelectedRows[0];
+                if (row.Tag is Medicine med)
+                {
+                    selectedMedicineId = med.Id;
+                }
+                else if (row.Cells["Id"].Value is int id)
+                {
+                    selectedMedicineId = id;
+                }
+            }
+
+            using var editor = new FormMedicineEditor(selectedMedicineId);
+            if (editor.ShowDialog(this) == DialogResult.OK)
+            {
+                LoadMedicines();
+            }
         }
 
         // Mở màn hình báo cáo cảnh báo thuốc (#15)

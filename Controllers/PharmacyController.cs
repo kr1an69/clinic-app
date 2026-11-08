@@ -42,5 +42,29 @@ namespace ClinicManagement.Controllers
                 ORDER BY StockQuantity ASC, ExpiryDate ASC;";
             return conn.Query<Medicine>(sql).ToList();
         }
+
+        // Nhập bổ sung số lượng tồn kho và cập nhật giá/hạn dùng mới (nếu có)
+        public void RestockMedicine(int medicineId, int addQuantity, double? newPrice = null, string? newExpiryDate = null)
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                UPDATE Medicines
+                SET StockQuantity = StockQuantity + @AddQuantity,
+                    UnitPrice = COALESCE(@NewPrice, UnitPrice),
+                    ExpiryDate = COALESCE(@NewExpiryDate, ExpiryDate)
+                WHERE Id = @MedicineId;";
+            conn.Execute(sql, new { MedicineId = medicineId, AddQuantity = addQuantity, NewPrice = newPrice, NewExpiryDate = newExpiryDate });
+        }
+
+        // Kiểm tra mã thuốc đã tồn tại trong CSDL chưa
+        public bool IsMedicineCodeExists(string code, int? excludeId = null)
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT COUNT(1)
+                FROM Medicines
+                WHERE UPPER(Code) = UPPER(@Code) AND (@ExcludeId IS NULL OR Id <> @ExcludeId);";
+            return conn.ExecuteScalar<int>(sql, new { Code = code.Trim(), ExcludeId = excludeId }) > 0;
+        }
     }
 }

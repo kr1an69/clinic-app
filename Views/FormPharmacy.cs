@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ClinicManagement.Controllers;
+using ClinicManagement.Helpers;
 using FontAwesome.Sharp;
 
 namespace ClinicManagement.Views
@@ -47,11 +48,12 @@ namespace ClinicManagement.Views
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 ColumnCount = 1,
-                RowCount = 3,
+                RowCount = 4,
                 Anchor = AnchorStyles.None,
                 Padding = new Padding(20)
             };
             cardLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            cardLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             cardLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             cardLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             cardLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -85,13 +87,27 @@ namespace ClinicManagement.Views
                 Anchor = AnchorStyles.None,
                 TextAlign = ContentAlignment.MiddleCenter,
                 Font = new Font("Segoe UI", 10.5F, FontStyle.Regular),
-                ForeColor = Color.FromArgb(127, 140, 141),
-                Margin = new Padding(0)
+                ForeColor = UiHelper.SecondaryGray,
+                Margin = new Padding(0, 0, 0, 16)
+            };
+
+            var btnOpenInventory = UiHelper.CreateButton(
+                "Mở Quản Lý Danh Mục Kho Thuốc (#13)",
+                IconChar.BoxesStacked,
+                UiHelper.PrimaryBlue,
+                320,
+                42);
+            btnOpenInventory.Anchor = AnchorStyles.None;
+            btnOpenInventory.Click += (_, _) =>
+            {
+                using var frmInventory = new FormMedicineInventory();
+                frmInventory.ShowDialog(this);
             };
 
             cardLayout.Controls.Add(_iconBanner, 0, 0);
             cardLayout.Controls.Add(_lblTitle, 0, 1);
             cardLayout.Controls.Add(_lblDescription, 0, 2);
+            cardLayout.Controls.Add(btnOpenInventory, 0, 3);
 
             _rootLayout.Controls.Add(cardLayout, 1, 1);
             this.Controls.Add(_rootLayout);
