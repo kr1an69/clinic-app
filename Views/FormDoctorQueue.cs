@@ -33,11 +33,16 @@ namespace ClinicManagement.Views
         private Label _lblPatientName = null!;
         private Label _lblPatientMeta = null!;
 
+        // Dữ liệu bệnh nhân đang chọn
+        private QueueItem? _selectedQueueItem;
+
         public FormDoctorQueue(Action<QueueItem>? onOpenExamScreen = null, Action<int>? onOpenHistoryScreen = null)
         {
             _onOpenExamScreen = onOpenExamScreen;
             _onOpenHistoryScreen = onOpenHistoryScreen;
             InitializeComponent();
+            RegisterEvents();
+            LoadQueueData();
         }
 
         private void InitializeComponent()
@@ -48,16 +53,9 @@ namespace ClinicManagement.Views
             this.BackColor = Color.FromArgb(245, 247, 250);
             this.Dock = DockStyle.Fill;
 
-            // 1. Khởi tạo Banner tiêu đề
             var bannerPanel = BuildHeaderBanner();
-
-            // 2. Khởi tạo Layout chính 2 cột (60% danh sách chờ, 40% điều phối)
             _mainLayout = BuildMainLayout();
-
-            // 3. Khởi tạo cụm bảng danh sách bên trái
             _grpWaitingList = BuildWaitingListGroup();
-
-            // 4. Khởi tạo cụm thẻ gọi khám bên phải
             _grpCallAction = BuildCallActionGroup();
 
             _mainLayout.Controls.Add(_grpWaitingList, 0, 0);
@@ -306,6 +304,94 @@ namespace ClinicManagement.Views
 
             group.Controls.Add(layout);
             return group;
+        }
+
+        // --- CÁC PHƯƠNG THỨC NGHIỆP VỤ & SỰ KIỆN (GIAI ĐOẠN 2) ---
+
+        private void RegisterEvents()
+        {
+            _btnRefresh.Click += (_, _) => LoadQueueData();
+            _dgvDoctorWaiting.SelectionChanged += (_, _) => OnSelectionChanged();
+
+            // Định dạng màu sắc trạng thái cột Status
+            _dgvDoctorWaiting.CellFormatting += (_, e) =>
+            {
+                if (e.RowIndex >= 0 && _dgvDoctorWaiting.Columns[e.ColumnIndex].Name == "Status")
+                {
+                    string status = e.Value?.ToString() ?? "";
+                    if (status == "Examining")
+                    {
+                        e.Value = "Đang khám";
+                        e.CellStyle.ForeColor = UiHelper.PrimaryBlue;
+                        e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                    }
+                    else if (status == "Waiting")
+                    {
+                        e.Value = "Đang chờ";
+                        e.CellStyle.ForeColor = UiHelper.WarningOrange;
+                        e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                    }
+                }
+            };
+        }
+
+        public void LoadQueueData()
+        {
+            try
+            {
+                var list = _controller.GetPatientsWaitingForDoctor();
+                _dgvDoctorWaiting.Rows.Clear();
+
+                foreach (var item in list)
+                {
+                    int rowIndex = _dgvDoctorWaiting.Rows.Add(
+                        $"{item.QueueNumber:D2}",
+                        item.PatientName ?? "Không có tên",
+                        item.Phone ?? "---",
+                        item.Status
+                    );
+                    _dgvDoctorWaiting.Rows[rowIndex].Tag = item;
+                }
+
+                if (_dgvDoctorWaiting.Rows.Count > 0)
+                {
+                    _dgvDoctorWaiting.Rows[0].Selected = true;
+                    OnSelectionChanged();
+                }
+                else
+                {
+                    ResetPatientCard();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tải danh sách hàng đợi: {ex.Message}", "Lỗi CSDL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void OnSelectionChanged()
+        {
+            if (_dgvDoctorWaiting.SelectedRows.Count > 0)
+            {
+                var row = _dgvDoctorWaiting.SelectedRows[0];
+                if (row.Tag is QueueItem item)
+                {
+                    _selectedQueueItem = item;
+                    _lblQueueNumberBig.Text = $"STT: {item.QueueNumber:D2}";
+                    _lblPatientName.Text = item.PatientName ?? "Chưa rõ tên";
+                    _lblPatientMeta.Text = $"Mã BN: #{item.PatientId} | SĐT: {item.Phone ?? "---"} | Trạng thái: {item.Status}";
+                    return;
+                }
+            }
+            ResetPatientCard();
+        }
+
+        private void ResetPatientCard()
+        {
+            _selectedQueueItem = null;
+            _lblQueueNumberBig.Text = "STT: --";
+            _lblPatientName.Text = "Chưa có lượt chờ nào";
+            _lblPatientMeta.Text = "Hàng đợi phòng khám hiện đang trống";
         }
     }
 }
