@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -30,10 +30,11 @@ namespace ClinicManagement.Views
 
         private void InitializeComponent()
         {
-            this.Text = "Quản Lý Danh Mục Kho Thuốc (#13)";
+            this.Text = "Quản Lý Danh Mục Kho Thuốc";
             this.Size = new Size(1280, 760);
-            this.MinimumSize = new Size(1120, 660);
+            this.MinimumSize = new Size(1280, 760);
             this.StartPosition = FormStartPosition.CenterParent;
+            this.WindowState = FormWindowState.Maximized;
             this.AutoScaleMode = AutoScaleMode.Dpi;
             this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
             this.BackColor = Color.FromArgb(245, 247, 250);
@@ -120,10 +121,10 @@ namespace ClinicManagement.Views
                 Margin = new Padding(0)
             };
 
-            _btnOpenAlertReport = UiHelper.CreateButton("Xem Báo Cáo Cảnh Báo (#15)", IconChar.TriangleExclamation, UiHelper.WarningOrange, 230);
+            _btnOpenAlertReport = UiHelper.CreateButton("Xem Báo Cáo Cảnh Báo", IconChar.TriangleExclamation, UiHelper.WarningOrange, 230);
             _btnOpenAlertReport.Click += BtnOpenAlertReport_Click;
 
-            _btnOpenEditor = UiHelper.CreateButton("Thêm Thuốc Mới / Nhập Kho (#14)", IconChar.Plus, UiHelper.SuccessGreen, 255);
+            _btnOpenEditor = UiHelper.CreateButton("Thêm Thuốc Mới / Nhập Kho", IconChar.Plus, UiHelper.SuccessGreen, 255);
             _btnOpenEditor.Click += BtnOpenEditor_Click;
 
             actionFlow.Controls.Add(_btnOpenAlertReport);
@@ -347,11 +348,25 @@ namespace ClinicManagement.Views
         // Mở màn hình thêm thuốc mới & nhập bổ sung tồn kho (#14)
         private void BtnOpenEditor_Click(object? sender, EventArgs e)
         {
-            MessageBox.Show(
-                "Màn hình Thêm thuốc mới & Nhập kho (#14 - FormMedicineEditor) sẽ được kết nối ở Commit 1.3.",
-                "Thông báo",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            int? selectedMedicineId = null;
+            if (_dgvMedicines.SelectedRows.Count > 0)
+            {
+                var row = _dgvMedicines.SelectedRows[0];
+                if (row.Tag is Medicine med)
+                {
+                    selectedMedicineId = med.Id;
+                }
+                else if (row.Cells["Id"].Value is int id)
+                {
+                    selectedMedicineId = id;
+                }
+            }
+
+            using var editor = new FormMedicineEditor(selectedMedicineId);
+            if (editor.ShowDialog(this) == DialogResult.OK)
+            {
+                LoadMedicines();
+            }
         }
 
         // Mở màn hình báo cáo cảnh báo thuốc (#15)
