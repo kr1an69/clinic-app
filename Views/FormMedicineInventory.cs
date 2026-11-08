@@ -30,10 +30,11 @@ namespace ClinicManagement.Views
 
         private void InitializeComponent()
         {
-            this.Text = "Quản Lý Danh Mục Kho Thuốc (#13)";
+            this.Text = "Quản Lý Danh Mục Kho Thuốc";
             this.Size = new Size(1280, 760);
-            this.MinimumSize = new Size(1120, 660);
+            this.MinimumSize = new Size(1280, 760);
             this.StartPosition = FormStartPosition.CenterParent;
+            this.WindowState = FormWindowState.Maximized;
             this.AutoScaleMode = AutoScaleMode.Dpi;
             this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
             this.BackColor = Color.FromArgb(245, 247, 250);
@@ -120,10 +121,10 @@ namespace ClinicManagement.Views
                 Margin = new Padding(0)
             };
 
-            _btnOpenAlertReport = UiHelper.CreateButton("Xem Báo Cáo Cảnh Báo (#15)", IconChar.TriangleExclamation, UiHelper.WarningOrange, 230);
+            _btnOpenAlertReport = UiHelper.CreateButton("Xem Báo Cáo Cảnh Báo", IconChar.TriangleExclamation, UiHelper.WarningOrange, 230);
             _btnOpenAlertReport.Click += BtnOpenAlertReport_Click;
 
-            _btnOpenEditor = UiHelper.CreateButton("Thêm Thuốc Mới / Nhập Kho (#14)", IconChar.Plus, UiHelper.SuccessGreen, 255);
+            _btnOpenEditor = UiHelper.CreateButton("Thêm Thuốc Mới / Nhập Kho", IconChar.Plus, UiHelper.SuccessGreen, 255);
             _btnOpenEditor.Click += BtnOpenEditor_Click;
 
             actionFlow.Controls.Add(_btnOpenAlertReport);

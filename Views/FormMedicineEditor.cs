@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -49,9 +49,9 @@ namespace ClinicManagement.Views
 
         private void InitializeComponent()
         {
-            this.Text = "Thêm Thuốc Mới & Nhập Bổ Sung Tồn Kho (#14)";
-            this.Size = new Size(1000, 680);
-            this.MinimumSize = new Size(940, 640);
+            this.Text = "Thêm Thuốc Mới & Nhập Bổ Sung Tồn Kho";
+            this.Size = new Size(1180, 750);
+            this.MinimumSize = new Size(1100, 700);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -83,7 +83,7 @@ namespace ClinicManagement.Views
 
             var lblTitle = new Label
             {
-                Text = "QUẢN LÝ NHẬP KHO & THÊM THUỐC MỚI",
+                Text = "QUẢN LÝ NHẬP KHO && THÊM THUỐC MỚI",
                 Font = new Font("Segoe UI", 13F, FontStyle.Bold),
                 ForeColor = UiHelper.DarkText,
                 AutoSize = true,
@@ -162,7 +162,7 @@ namespace ClinicManagement.Views
                 RowCount = 8,
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Regular)
             };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 135F));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140F));
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
             for (int i = 0; i < 7; i++)
@@ -279,11 +279,11 @@ namespace ClinicManagement.Views
                 RowCount = 7,
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Regular)
             };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 145F));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
 
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // Chọn thuốc
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F)); // Panel thông tin hiện tại
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 125F)); // Panel thông tin hiện tại
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // Số lượng nhập
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // Cập nhật đơn giá
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // Cập nhật hạn dùng
@@ -295,7 +295,8 @@ namespace ClinicManagement.Views
             _cboSelectMedicine = new ComboBox
             {
                 Dock = DockStyle.Fill,
-                DropDownStyle = ComboBoxStyle.DropDownList
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                DropDownWidth = 600
             };
             _cboSelectMedicine.SelectedIndexChanged += (_, _) => UpdateSelectedMedicineInfo();
 
@@ -304,23 +305,26 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(240, 244, 248),
-                Padding = new Padding(10),
-                Margin = new Padding(0, 4, 0, 6)
+                BorderStyle = BorderStyle.FixedSingle,
+                Padding = new Padding(14, 10, 14, 10),
+                Margin = new Padding(0, 4, 0, 8)
             };
 
             var infoLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
-                RowCount = 4
+                RowCount = 2
             };
             infoLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             infoLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            infoLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            infoLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
 
-            _lblCurrentCode = new Label { Text = "Mã thuốc: --", AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Regular) };
-            _lblCurrentStock = new Label { Text = "Tồn kho: --", AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Bold), ForeColor = UiHelper.PrimaryBlue };
-            _lblCurrentPrice = new Label { Text = "Đơn giá: --", AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Regular) };
-            _lblCurrentExpiry = new Label { Text = "Hạn dùng: --", AutoSize = true, Font = new Font("Segoe UI", 9F, FontStyle.Regular) };
+            _lblCurrentCode = new Label { Text = "Mã thuốc: --", AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Regular), Anchor = AnchorStyles.Left, Margin = new Padding(4, 4, 4, 4) };
+            _lblCurrentStock = new Label { Text = "Tồn kho: --", AutoSize = true, Font = new Font("Segoe UI", 10F, FontStyle.Bold), ForeColor = UiHelper.PrimaryBlue, Anchor = AnchorStyles.Left, Margin = new Padding(4, 4, 4, 4) };
+            _lblCurrentPrice = new Label { Text = "Đơn giá: --", AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Regular), Anchor = AnchorStyles.Left, Margin = new Padding(4, 4, 4, 4) };
+            _lblCurrentExpiry = new Label { Text = "Hạn dùng: --", AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Regular), Anchor = AnchorStyles.Left, Margin = new Padding(4, 4, 4, 4) };
 
             infoLayout.Controls.Add(_lblCurrentCode, 0, 0);
             infoLayout.Controls.Add(_lblCurrentStock, 1, 0);
