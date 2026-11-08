@@ -36,11 +36,16 @@ namespace ClinicManagement.Views
         // Dữ liệu bệnh nhân đang chọn
         private QueueItem? _selectedQueueItem;
 
+        // Hiệu ứng Pulse Animation khi gọi khám
+        private System.Windows.Forms.Timer? _pulseTimer;
+        private int _pulseStep = 0;
+
         public FormDoctorQueue(Action<QueueItem>? onOpenExamScreen = null, Action<int>? onOpenHistoryScreen = null)
         {
             _onOpenExamScreen = onOpenExamScreen;
             _onOpenHistoryScreen = onOpenHistoryScreen;
             InitializeComponent();
+            SetupAnimationTimer();
             RegisterEvents();
             LoadQueueData();
         }
@@ -306,11 +311,14 @@ namespace ClinicManagement.Views
             return group;
         }
 
-        // --- CÁC PHƯƠNG THỨC NGHIỆP VỤ & SỰ KIỆN (GIAI ĐOẠN 2) ---
+        // --- CÁC PHƯƠNG THỨC NGHIỆP VỤ & SỰ KIỆN (GIAI ĐOẠN 2 & 3) ---
 
         private void RegisterEvents()
         {
             _btnRefresh.Click += (_, _) => LoadQueueData();
+            _btnCallPatient.Click += (_, _) => HandleCallPatientClick();
+            _btnViewHistory.Click += (_, _) => HandleViewHistoryClick();
+            _btnCancelQueue.Click += (_, _) => HandleCancelQueueClick();
             _dgvDoctorWaiting.SelectionChanged += (_, _) => OnSelectionChanged();
 
             // Định dạng màu sắc trạng thái cột Status
@@ -330,6 +338,51 @@ namespace ClinicManagement.Views
                         e.Value = "Đang chờ";
                         e.CellStyle.ForeColor = UiHelper.WarningOrange;
                         e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                    }
+                }
+            };
+        }
+
+        private void SetupAnimationTimer()
+        {
+            _pulseTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 70
+            };
+            _pulseTimer.Tick += (_, _) =>
+            {
+                _pulseStep++;
+                if (_pulseStep % 2 == 1)
+                {
+                    _patientCard.BackColor = Color.FromArgb(212, 239, 223); // Xanh nhạt sáng
+                    _lblQueueNumberBig.ForeColor = UiHelper.SuccessGreen;
+                }
+                else
+                {
+                    _patientCard.BackColor = Color.FromArgb(235, 245, 251); // Màu gốc
+                    _lblQueueNumberBig.ForeColor = UiHelper.PrimaryBlue;
+                }
+
+                if (_pulseStep >= 6) // Chớp 3 nhịp
+                {
+                    _pulseTimer.Stop();
+                    _pulseStep = 0;
+
+                    if (_selectedQueueItem != null)
+                    {
+                        if (_onOpenExamScreen != null)
+                        {
+                            _onOpenExamScreen.Invoke(_selectedQueueItem);
+                        }
+                        else
+                        {
+                            MessageBox.Show(
+                                $"Đã gọi thành công bệnh nhân: {_selectedQueueItem.PatientName} (STT {_selectedQueueItem.QueueNumber:D2})!\nTrạng thái đã cập nhật sang 'Examining'.",
+                                "Thông Báo Gọi Khám",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Information);
+                            LoadQueueData();
+                        }
                     }
                 }
             };
@@ -392,6 +445,87 @@ namespace ClinicManagement.Views
             _lblQueueNumberBig.Text = "STT: --";
             _lblPatientName.Text = "Chưa có lượt chờ nào";
             _lblPatientMeta.Text = "Hàng đợi phòng khám hiện đang trống";
+        }
+
+        private void HandleCallPatientClick()
+        {
+            if (_selectedQueueItem == null)
+            {
+                MessageBox.Show("Vui lòng chọn một bệnh nhân trong danh sách trước khi gọi khám!", "Chưa chọn bệnh nhân", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                _controller.CallPatient(_selectedQueueItem.Id);
+                _selectedQueueItem.Status = "Examining";
+
+                _pulseStep = 0;
+                _pulseTimer?.Start();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi cập nhật trạng thái gọi khám: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void HandleViewHistoryClick()
+        {
+            if (_selectedQueueItem == null)
+            {
+                MessageBox.Show("Vui lòng chọn một bệnh nhân để xem tiền sử khám!", "Chưa chọn bệnh nhân", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_onOpenHistoryScreen != null)
+            {
+                _onOpenHistoryScreen.Invoke(_selectedQueueItem.PatientId);
+            }
+            else
+            {
+                MessageBox.Show(
+                    $"Xem lịch sử bệnh án cũ của bệnh nhân: {_selectedQueueItem.PatientName} (Mã BN #{_selectedQueueItem.PatientId}).\n(Tính năng liên kết mở Screen #08 FormMedicalHistory)",
+                    "Tiền Sử Bệnh Án",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+        }
+
+        private void HandleCancelQueueClick()
+        {
+            if (_selectedQueueItem == null)
+            {
+                MessageBox.Show("Vui lòng chọn bệnh nhân cần hủy lượt!", "Chưa chọn bệnh nhân", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var confirm = MessageBox.Show(
+                $"Bạn có chắc chắn muốn hủy lượt khám của bệnh nhân {_selectedQueueItem.PatientName} (STT {_selectedQueueItem.QueueNumber:D2})?\nTrạng thái sẽ chuyển thành 'Cancelled'.",
+                "Xác Nhận Hủy Lượt",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (confirm == DialogResult.Yes)
+            {
+                try
+                {
+                    _controller.CancelPatientQueue(_selectedQueueItem.Id);
+                    LoadQueueData();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi hủy lượt: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _pulseTimer?.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
