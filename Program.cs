@@ -18,8 +18,12 @@ namespace ClinicManagement
             // Tự động khởi tạo Database SQLite và dữ liệu mẫu nếu chưa tồn tại
             DbContext.InitializeDatabase();
 
-            // Khởi chạy ứng dụng
-            Application.Run(new FormMain());
+            using var loginForm = new FormLogin();
+            if (loginForm.ShowDialog() == DialogResult.OK && loginForm.LoggedInUser != null)
+            {
+                // Khởi chạy ứng dụng
+                Application.Run(new FormMain());
+            }
         }
     }
 }

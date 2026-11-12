@@ -155,7 +155,7 @@ namespace ClinicManagement.Controllers
             using var conn = DbContext.GetConnection();
             var today = DateTime.Now.ToString("yyyy-MM-dd");
             const string sql = @"
-                 SELECT q.Id, q.PatientId q.QueueNumber, q.QueueDate, q.Status, datetime(q.CreatedAt, 'localtime') AS CreatedAt,
+                 SELECT q.Id, q.PatientId, q.QueueNumber, q.QueueDate, q.Status, datetime(q.CreatedAt, 'localtime') AS CreatedAt,
                         p.FullName AS PatientName, p.Phone
                  FROM Queues q 
                  INNER JOIN Patients p ON q.PatientId = p.Id
@@ -181,7 +181,7 @@ namespace ClinicManagement.Controllers
                  ORDER BY QueueDate  DESC";
             return conn.Query<DailyPatientReportItem>(sql, new
             {
-                FromDate = fromDate?.ToString(""), 
+                FromDate = fromDate?.ToString("yyyy-MM-dd"), 
                 ToDate = toDate?.ToString("yyyy-MM-dd")
             }).ToList();
         }
