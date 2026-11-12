@@ -49,6 +49,8 @@ namespace ClinicManagement.Views
         {
             _currentPatient = initialPatient;
             InitializeComponent();
+            RegisterEvents();
+            LoadInitialData();
         }
 
         private void InitializeComponent()
@@ -613,12 +615,12 @@ namespace ClinicManagement.Views
                 RowTemplate = { Height = 34 }
             };
 
-            _dgvPrescription.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(223, 230, 233);
-            _dgvPrescription.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(45, 52, 54);
+            _dgvPrescription.ColumnHeadersDefaultCellStyle.BackColor = UiHelper.PrimaryBlue;
+            _dgvPrescription.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             _dgvPrescription.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
             _dgvPrescription.ColumnHeadersHeight = 36;
-            _dgvPrescription.DefaultCellStyle.SelectionBackColor = Color.FromArgb(174, 214, 241);
-            _dgvPrescription.DefaultCellStyle.SelectionForeColor = Color.FromArgb(27, 79, 114);
+            _dgvPrescription.DefaultCellStyle.SelectionBackColor = Color.FromArgb(214, 234, 248);
+            _dgvPrescription.DefaultCellStyle.SelectionForeColor = UiHelper.DarkText;
 
             _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "Index", HeaderText = "STT", FillWeight = 12 });
             _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "MedicineName", HeaderText = "Tên Thuốc & Hàm Lượng", FillWeight = 34 });
@@ -633,6 +635,390 @@ namespace ClinicManagement.Views
 
             grpPrescription.Controls.Add(layout);
             return grpPrescription;
+        }
+
+        // --- CÁC PHƯƠNG THỨC NGHIỆP VỤ & SỰ KIỆN ---
+
+        private void RegisterEvents()
+        {
+            _txtMedSearch.TextChanged += (_, _) => UpdateMedicineStockPreview();
+            _nudMedQty.ValueChanged += (_, _) => UpdateMedicineStockPreview();
+            _nudExamFee.ValueChanged += (_, _) => UpdateFinancialSummary();
+
+            _btnAddMed.Click += (_, _) => HandleAddMedicineToPrescription();
+            _btnRemoveMed.Click += (_, _) => HandleRemoveSelectedMedicine();
+            _btnSaveComplete.Click += (_, _) => HandleSaveMedicalRecordAndPrescription();
+
+            // Sự kiện điều hướng mở các màn hình của Bác sĩ
+            _btnOpenQueue.Click += (_, _) => OpenDoctorQueueDialog();
+            _btnOpenHistory.Click += (_, _) => OpenMedicalHistoryDialog();
+            _btnOpenPrescriptionList.Click += (_, _) => OpenPrescriptionListDialog();
+            _btnOpenMedicineView.Click += (_, _) => OpenMedicineViewDialog();
+        }
+
+        // Nạp danh mục thuốc AutoComplete và bệnh nhân đang khám ban đầu
+        public void LoadInitialData()
+        {
+            LoadMedicinesForAutoComplete();
+
+            if (_currentPatient == null)
+            {
+                var waitingList = _controller.GetPatientsWaitingForDoctor();
+                // Ưu tiên chọn bệnh nhân đang ở trạng thái Examining, nếu chưa có thì lấy người đầu hàng đợi
+                _currentPatient = waitingList.FirstOrDefault(q => q.Status == "Examining")
+                                  ?? waitingList.FirstOrDefault();
+            }
+
+            BindCurrentPatientInfo();
+            UpdateFinancialSummary();
+        }
+
+        // Nạp danh sách thuốc còn tồn kho vào bộ gợi ý AutoComplete của TextBox
+        private void LoadMedicinesForAutoComplete()
+        {
+            try
+            {
+                _availableMedicines = _controller.GetAllMedicinesForPrescription();
+                var autoComplete = new AutoCompleteStringCollection();
+                foreach (var med in _availableMedicines)
+                {
+                    autoComplete.Add(med.Name);
+                    autoComplete.Add($"{med.Code} - {med.Name}");
+                }
+                _txtMedSearch.AutoCompleteCustomSource = autoComplete;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi nạp danh mục thuốc gợi ý: {ex.Message}", "Lỗi CSDL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // Hiển thị thông tin bệnh nhân đang được bác sĩ khám
+        public void SetExaminingPatient(QueueItem patient)
+        {
+            _currentPatient = patient;
+            BindCurrentPatientInfo();
+        }
+
+        private void BindCurrentPatientInfo()
+        {
+            if (_currentPatient != null)
+            {
+                _lblPatientName.Text = $"STT {_currentPatient.QueueNumber:D2}: {_currentPatient.PatientName}";
+                _lblPatientMeta.Text = $"Mã BN: #{_currentPatient.PatientId} | SĐT: {_currentPatient.Phone ?? "---"} | Ngày khám: {_currentPatient.QueueDate}";
+                _lblQueueStatus.Text = _currentPatient.Status == "Examining" ? "Đang khám" : "Đang chờ";
+                _lblQueueStatus.BackColor = _currentPatient.Status == "Examining"
+                    ? Color.FromArgb(212, 239, 223)
+                    : Color.FromArgb(254, 249, 231);
+                _lblQueueStatus.ForeColor = _currentPatient.Status == "Examining"
+                    ? Color.FromArgb(30, 132, 73)
+                    : Color.FromArgb(183, 149, 11);
+            }
+            else
+            {
+                _lblPatientName.Text = "Hiện chưa có bệnh nhân trong hàng đợi";
+                _lblPatientMeta.Text = "Bấm nút 'Hàng Đợi & Gọi Khám' phía trên để chọn bệnh nhân";
+                _lblQueueStatus.Text = "Trống";
+                _lblQueueStatus.BackColor = Color.FromArgb(237, 242, 247);
+                _lblQueueStatus.ForeColor = UiHelper.SecondaryGray;
+            }
+        }
+
+        // Tìm thuốc khớp với nội dung bác sĩ gõ trong ô AutoComplete
+        private Medicine? FindSelectedMedicine()
+        {
+            string input = _txtMedSearch.Text.Trim();
+            if (string.IsNullOrEmpty(input))
+            {
+                return null;
+            }
+
+            return _availableMedicines.FirstOrDefault(m =>
+                       m.Name.Equals(input, StringComparison.OrdinalIgnoreCase) ||
+                       m.Code.Equals(input, StringComparison.OrdinalIgnoreCase) ||
+                       $"{m.Code} - {m.Name}".Equals(input, StringComparison.OrdinalIgnoreCase))
+                   ?? _availableMedicines.FirstOrDefault(m =>
+                       m.Name.Contains(input, StringComparison.OrdinalIgnoreCase) ||
+                       m.Code.Contains(input, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Kiểm tra tức thì số lượng tồn kho khi bác sĩ gõ tên thuốc hoặc đổi số lượng
+        private void UpdateMedicineStockPreview()
+        {
+            var med = FindSelectedMedicine();
+            if (med == null)
+            {
+                _txtStockStatus.Text = string.IsNullOrWhiteSpace(_txtMedSearch.Text)
+                    ? "Chưa chọn thuốc"
+                    : "Không tìm thấy thuốc phù hợp";
+                _txtStockStatus.ForeColor = UiHelper.SecondaryGray;
+                return;
+            }
+
+            int requestedQty = (int)_nudMedQty.Value;
+            int existingInGrid = _prescriptionDetails
+                .Where(d => d.MedicineId == med.Id)
+                .Sum(d => d.Quantity);
+
+            bool isEnough = _controller.CheckMedicineStock(med.Id, requestedQty + existingInGrid, out int currentStock);
+
+            if (isEnough)
+            {
+                _txtStockStatus.Text = $"Tồn: {currentStock} {med.Unit} | Giá: {med.UnitPrice:N0}đ (Đủ thuốc)";
+                _txtStockStatus.ForeColor = Color.FromArgb(30, 132, 73);
+            }
+            else
+            {
+                _txtStockStatus.Text = $"Chỉ còn {currentStock} {med.Unit} (Không đủ {requestedQty + existingInGrid} {med.Unit}!)";
+                _txtStockStatus.ForeColor = UiHelper.DangerRed;
+            }
+        }
+
+        // Thêm thuốc vào danh sách đơn thuốc (có kiểm tra tồn kho thực tế trong CSDL)
+        private void HandleAddMedicineToPrescription()
+        {
+            var med = FindSelectedMedicine();
+            if (med == null)
+            {
+                MessageBox.Show(
+                    "Vui lòng nhập hoặc chọn đúng tên thuốc từ danh sách gợi ý!",
+                    "Chưa chọn thuốc",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                _txtMedSearch.Focus();
+                return;
+            }
+
+            int addQty = (int)_nudMedQty.Value;
+            string dosage = _cboMedDosage.Text.Trim();
+            if (string.IsNullOrEmpty(dosage))
+            {
+                MessageBox.Show(
+                    "Vui lòng nhập liều dùng / cách dùng cho thuốc này!",
+                    "Thiếu liều dùng",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                _cboMedDosage.Focus();
+                return;
+            }
+
+            var existingItem = _prescriptionDetails.FirstOrDefault(d => d.MedicineId == med.Id);
+            int totalRequestedQty = (existingItem?.Quantity ?? 0) + addQty;
+
+            // Gọi DoctorController kiểm tra tồn kho tức thì
+            if (!_controller.CheckMedicineStock(med.Id, totalRequestedQty, out int currentStock))
+            {
+                MessageBox.Show(
+                    $"Thuốc '{med.Name}' trong kho hiện chỉ còn {currentStock} {med.Unit}, không đủ để kê {totalRequestedQty} {med.Unit}!",
+                    "Cảnh Báo Không Đủ Tồn Kho",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity = totalRequestedQty;
+                existingItem.Dosage = dosage;
+            }
+            else
+            {
+                _prescriptionDetails.Add(new PrescriptionDetail
+                {
+                    MedicineId = med.Id,
+                    MedicineName = med.Name,
+                    Quantity = addQty,
+                    UnitPrice = med.UnitPrice,
+                    Dosage = dosage
+                });
+            }
+
+            RefreshPrescriptionGrid();
+            UpdateFinancialSummary();
+
+            // Xóa trắng ô tìm thuốc để bác sĩ nhập tiếp thuốc khác
+            _txtMedSearch.Clear();
+            _nudMedQty.Value = 10;
+            _txtMedSearch.Focus();
+        }
+
+        // Xóa một dòng thuốc khỏi đơn đang kê
+        private void HandleRemoveSelectedMedicine()
+        {
+            if (_dgvPrescription.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Vui lòng chọn dòng thuốc cần xóa trên bảng đơn thuốc!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            var selectedRow = _dgvPrescription.SelectedRows[0];
+            if (selectedRow.Tag is PrescriptionDetail detail)
+            {
+                _prescriptionDetails.Remove(detail);
+                RefreshPrescriptionGrid();
+                UpdateFinancialSummary();
+                UpdateMedicineStockPreview();
+            }
+        }
+
+        // Hiển thị lại danh sách thuốc đã kê lên DataGridView
+        private void RefreshPrescriptionGrid()
+        {
+            _dgvPrescription.Rows.Clear();
+            for (int i = 0; i < _prescriptionDetails.Count; i++)
+            {
+                var item = _prescriptionDetails[i];
+                var medInfo = _availableMedicines.FirstOrDefault(m => m.Id == item.MedicineId);
+                string unit = medInfo?.Unit ?? "Viên";
+
+                int rowIdx = _dgvPrescription.Rows.Add(
+                    i + 1,
+                    item.MedicineName ?? string.Empty,
+                    unit,
+                    item.Quantity,
+                    $"{item.UnitPrice:N0} đ",
+                    item.Dosage ?? string.Empty,
+                    $"{item.SubTotal:N0} đ"
+                );
+                _dgvPrescription.Rows[rowIdx].Tag = item;
+            }
+        }
+
+        // Tự động tính lại Tổng tiền thuốc và Tổng cộng dự kiến
+        private void UpdateFinancialSummary()
+        {
+            double examFee = (double)_nudExamFee.Value;
+            double medTotal = _prescriptionDetails.Sum(d => d.SubTotal);
+            double grandTotal = examFee + medTotal;
+
+            _lblSummaryExamFee.Text = $"{examFee:N0} đ";
+            _lblSummaryMedTotal.Text = $"{medTotal:N0} đ";
+            _lblSummaryGrandTotal.Text = $"{grandTotal:N0} đ";
+        }
+
+        // Lưu Hồ sơ bệnh án + Đơn thuốc bằng Transaction và chuyển trạng thái sang PendingPayment
+        private void HandleSaveMedicalRecordAndPrescription()
+        {
+            if (_currentPatient == null)
+            {
+                MessageBox.Show(
+                    "Chưa có bệnh nhân nào được chọn! Vui lòng bấm 'Hàng Đợi & Gọi Khám' để chọn bệnh nhân.",
+                    "Chưa chọn bệnh nhân",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            string symptoms = _txtSymptoms.Text.Trim();
+            string diagnosis = _txtDiagnosis.Text.Trim();
+
+            if (string.IsNullOrEmpty(symptoms) || string.IsNullOrEmpty(diagnosis))
+            {
+                MessageBox.Show(
+                    "Vui lòng nhập đầy đủ Triệu chứng lâm sàng và Chẩn đoán bệnh trước khi hoàn tất khám!",
+                    "Thiếu thông tin khám bệnh",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                var record = new MedicalRecord
+                {
+                    PatientId = _currentPatient.PatientId,
+                    DoctorId = 3, // BS.CKI Nguyễn Văn An trong seed_clinic_data.sql
+                    QueueId = _currentPatient.Id,
+                    Symptoms = symptoms,
+                    Diagnosis = diagnosis,
+                    ExamFee = (double)_nudExamFee.Value
+                };
+
+                int recordId = _controller.SaveMedicalRecordAndPrescription(record, _prescriptionDetails);
+                double medTotal = _prescriptionDetails.Sum(d => d.SubTotal);
+
+                MessageBox.Show(
+                    $"Đã lưu Hồ sơ bệnh án (Mã BA-{recordId:D3}) và Đơn thuốc cho bệnh nhân {_currentPatient.PatientName}!\n\n" +
+                    $"• Tiền công khám: {record.ExamFee:N0} đ\n" +
+                    $"• Tổng tiền thuốc ({_prescriptionDetails.Count} loại): {medTotal:N0} đ\n" +
+                    $"• Trạng thái hàng đợi đã chuyển sang: Chờ thu ngân thanh toán (PendingPayment).",
+                    "Hoàn Tất Khám & Kê Đơn",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
+                // Reset form và tự động nạp bệnh nhân tiếp theo trong hàng đợi
+                _txtSymptoms.Clear();
+                _txtDiagnosis.Clear();
+                _txtMedSearch.Clear();
+                _prescriptionDetails.Clear();
+                RefreshPrescriptionGrid();
+
+                _currentPatient = null;
+                LoadInitialData();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi lưu bệnh án và đơn thuốc: {ex.Message}", "Lỗi CSDL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // Mở màn hình Hàng đợi & Gọi khám của Bác sĩ
+        private void OpenDoctorQueueDialog()
+        {
+            QueueItem? calledPatient = null;
+            FormDoctorQueue? dialogRef = null;
+            dialogRef = new FormDoctorQueue(
+                onOpenExamScreen: (queueItem) =>
+                {
+                    calledPatient = queueItem;
+                    dialogRef?.Close();
+                });
+
+            using (dialogRef)
+            {
+                dialogRef.TopLevel = true;
+                dialogRef.FormBorderStyle = FormBorderStyle.Sizable;
+                dialogRef.StartPosition = FormStartPosition.CenterParent;
+                dialogRef.Size = new Size(1120, 680);
+                dialogRef.MinimumSize = new Size(980, 600);
+                dialogRef.ShowDialog(this);
+            }
+
+            if (calledPatient != null)
+            {
+                SetExaminingPatient(calledPatient);
+            }
+            else
+            {
+                LoadInitialData();
+            }
+        }
+
+        private void OpenMedicalHistoryDialog()
+        {
+            MessageBox.Show(
+                "Màn hình Tra cứu Lịch sử khám & Hồ sơ bệnh án (FormMedicalHistory) sẽ được tích hợp ở bước tiếp theo.",
+                "Thông báo",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+
+        private void OpenPrescriptionListDialog()
+        {
+            MessageBox.Show(
+                "Màn hình Quản lý Đơn thuốc đã kê (FormPrescriptionList) sẽ được tích hợp ở bước tiếp theo.",
+                "Thông báo",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+
+        private void OpenMedicineViewDialog()
+        {
+            MessageBox.Show(
+                "Màn hình Tra cứu Danh mục thuốc & Tồn kho (FormDoctorMedicineView) sẽ được tích hợp ở bước tiếp theo.",
+                "Thông báo",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
     }
 }
