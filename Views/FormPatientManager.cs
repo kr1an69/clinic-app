@@ -4,6 +4,5 @@ public partial class FormPatientManager : Form
 {
     public FormPatientManager()
     {
-        InitializeComponent();
     }
 }

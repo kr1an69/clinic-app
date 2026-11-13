@@ -22,7 +22,7 @@ namespace ClinicManagement
             using var loginForm = new FormLogin();
             if (loginForm.ShowDialog() == DialogResult.OK && loginForm.LoggedInUser != null)
             {
-                AppSession.CurrentUser = loginForm.LoggedInUnser;
+                AppSession.CurrentUser = loginForm.LoggedInUser;
                 Application.Run(new FormMain());
             }
         }

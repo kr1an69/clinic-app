@@ -11,7 +11,7 @@ namespace ClinicManagement.Helpers
         public const string RoleDoctor = "Doctor";
         public const string RoleCashier = "Cashier";
         
-        public static User? CurrentUser { get; private set; }
+        public static User? CurrentUser { get; set; }
         public static bool IsLoggedIn => CurrentUser != null;
         public static void SignIn(User user) => CurrentUser = user;
         public static void SignOut() => CurrentUser = null;
