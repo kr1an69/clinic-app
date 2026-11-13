@@ -30,13 +30,12 @@ namespace ClinicManagement.Views
             this.Text = "Đăng Nhập & Phân Quyền";
             this.AutoScaleDimensions = new SizeF(96F, 96F);
             this.AutoScaleMode = AutoScaleMode.Dpi;
-            this.MinimumSize = new Size(480, 560);
+            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
+            this.ClientSize = new Size(520, 700);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = true;
-            this.AutoScaleMode = AutoScaleMode.Dpi;
-            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
-            this.ClientSize = new Size(520, 700);
+            this.MinimumSize = new Size(480, 560);
             this.BackColor = Color.FromArgb(238, 242, 246);
             
             // Khung nền và thẻ
@@ -145,24 +144,14 @@ namespace ClinicManagement.Views
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            _btnLogin = UiHelper.CreateButton("ĐĂNG NHẬP HỆ THỐNG", IconChar.RightToBracket, UiHelper.PrimaryBlue, 200,
-                44);
+            _btnLogin = UiHelper.CreateButton("ĐĂNG NHẬP HỆ THỐNG", IconChar.RightToBracket, UiHelper.PrimaryBlue, 200, 44);
             _btnLogin.Dock = DockStyle.Fill;
             _btnLogin.TextAlign = ContentAlignment.MiddleCenter;
             _btnLogin.AutoSize = false;
             _btnLogin.Margin = new Padding(0);
             _btnLogin.Click += (s, e) => PerformLogin();
-
-            _txtUsername.KeyDown += (s, e) =>
-            {
-                if (e.KeyCode == Keys.Enter)
-                    PerformLogin();
-            };
-            _txtPassword.KeyDown += (s, e) =>
-            {
-                if (e.KeyCode == Keys.Enter)
-                    PerformLogin();
-            };
+            this.AcceptButton = _btnLogin;
+            
             
             // Chọn tài khoản
             var pnlAccounts = new GroupBox()
@@ -185,7 +174,7 @@ namespace ClinicManagement.Views
             accountGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             accountGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             accountGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            accountGrid.Controls.Add(CreateAccountBtn("Admin", "admin", "admin123", UiHelper.DarkText), 0, 0);
+            accountGrid.Controls.Add(CreateAccountBtn("Quản trị viên", "admin", "admin123", UiHelper.DarkText), 0, 0);
             accountGrid.Controls.Add(CreateAccountBtn("Lễ tân", "letan", "123", UiHelper.SecondaryGray), 1, 0);
             accountGrid.Controls.Add(CreateAccountBtn("Bác sĩ", "bacsi", "123", UiHelper.WarningOrange), 0, 1);
             accountGrid.Controls.Add(CreateAccountBtn("Dược sĩ", "duocsi", "123", UiHelper.SuccessGreen), 1, 1);
@@ -293,18 +282,26 @@ namespace ClinicManagement.Views
                 _lblError.Text = "Vui lòng nhập đầy đủ tài khoản và mật khẩu!";
                 return;
             }
-            
-            var user = _controller.Login(u, p);
-            if (user == null)
+
+            try
             {
-                _lblError.Text = "Tên đăng nhập hoặc mật khẩu không chính xác!";
-                _txtPassword.Focus();
-                return;
+                var user = _controller.Login(u, p);
+                if (user == null)
+                {
+                    _lblError.Text = "Tên đăng nhập hoặc mật khẩu không chính xác!";
+                    _txtPassword.Focus();
+                    return;
+                }
+
+                AppSession.SignIn(user);
+                LoggedInUser = user;
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
-            
-            LoggedInUser = user;
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            catch (Exception ex)
+            {
+                _lblError.Text = "Lỗi kết nối CSDL" + ex.Message;
+            }
         }
     }
 }
