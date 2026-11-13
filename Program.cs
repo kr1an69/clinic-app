@@ -2,6 +2,7 @@ using System;
 using System.Windows.Forms;
 using ClinicManagement.Data;
 using ClinicManagement.Views;
+using ClinicManagement.Helpers;
 
 namespace ClinicManagement
 {
@@ -21,7 +22,7 @@ namespace ClinicManagement
             using var loginForm = new FormLogin();
             if (loginForm.ShowDialog() == DialogResult.OK && loginForm.LoggedInUser != null)
             {
-                // Khởi chạy ứng dụng
+                AppSession.CurrentUser = loginForm.LoggedInUnser;
                 Application.Run(new FormMain());
             }
         }
