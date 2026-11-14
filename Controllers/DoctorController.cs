@@ -13,7 +13,7 @@ namespace ClinicManagement.Controllers
         // Lấy danh sách bệnh nhân đang chờ khám (Status = 'Waiting') theo số thứ tự
         public List<QueueItem> GetPatientsWaitingForDoctor()
         {
-            using var conn = DbContext.GetConnection();
+            using var conn = DbContext.GetConnection(); 
             const string sql = @"
                 SELECT 
                     q.Id,
