@@ -413,6 +413,7 @@ namespace ClinicManagement.Views
                 UiHelper.SuccessGreen,
                 260,
                 42);
+            _btnSaveComplete.AutoSize = false;
             _btnSaveComplete.Dock = DockStyle.Fill;
             _btnSaveComplete.Margin = new Padding(0);
 
@@ -664,9 +665,9 @@ namespace ClinicManagement.Views
             if (_currentPatient == null)
             {
                 var waitingList = _controller.GetPatientsWaitingForDoctor();
-                // Ưu tiên chọn bệnh nhân đang ở trạng thái Examining, nếu chưa có thì lấy người đầu hàng đợi
+                // Ưu tiên chọn bệnh nhân đang ở trạng thái Examining, nếu chưa có thì lấy người đầu tiên đang Waiting
                 _currentPatient = waitingList.FirstOrDefault(q => q.Status == "Examining")
-                                  ?? waitingList.FirstOrDefault();
+                                  ?? waitingList.FirstOrDefault(q => q.Status == "Waiting");
             }
 
             BindCurrentPatientInfo();
@@ -996,11 +997,9 @@ namespace ClinicManagement.Views
 
         private void OpenMedicalHistoryDialog()
         {
-            MessageBox.Show(
-                "Màn hình Tra cứu Lịch sử khám & Hồ sơ bệnh án (FormMedicalHistory) sẽ được tích hợp ở bước tiếp theo.",
-                "Thông báo",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            string initialKeyword = _currentPatient?.PatientName ?? string.Empty;
+            using var frmHistory = new FormMedicalHistory(initialKeyword);
+            frmHistory.ShowDialog(this);
         }
 
         private void OpenPrescriptionListDialog()
