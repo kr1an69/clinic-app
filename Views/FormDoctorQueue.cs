@@ -273,22 +273,19 @@ namespace ClinicManagement.Views
             _patientCard.Controls.Add(_lblQueueNumberBig);
             _patientCard.Controls.Add(lblCardHeader);
 
-            _btnCallPatient = UiHelper.CreateButton("  GỌI VÀO KHÁM & MỞ PHIẾU KHÁM", IconChar.Stethoscope, UiHelper.SuccessGreen, height: 44);
+            _btnCallPatient = UiHelper.CreateButton("GỌI VÀO KHÁM & MỞ PHIẾU KHÁM", IconChar.Stethoscope, UiHelper.SuccessGreen, height: 44);
+            _btnCallPatient.AutoSize = false;
             _btnCallPatient.Dock = DockStyle.Fill;
-            _btnCallPatient.TextAlign = ContentAlignment.MiddleLeft;
-            _btnCallPatient.Padding = new Padding(12, 0, 0, 0);
             _btnCallPatient.Margin = new Padding(0, 0, 0, 8);
 
-            _btnViewHistory = UiHelper.CreateButton("  Xem tiền sử khám bệnh của BN này", IconChar.ClockRotateLeft, UiHelper.PrimaryBlue, height: 40);
+            _btnViewHistory = UiHelper.CreateButton("Xem tiền sử khám bệnh của BN này", IconChar.ClockRotateLeft, UiHelper.PrimaryBlue, height: 40);
+            _btnViewHistory.AutoSize = false;
             _btnViewHistory.Dock = DockStyle.Fill;
-            _btnViewHistory.TextAlign = ContentAlignment.MiddleLeft;
-            _btnViewHistory.Padding = new Padding(12, 0, 0, 0);
             _btnViewHistory.Margin = new Padding(0, 0, 0, 8);
 
-            _btnCancelQueue = UiHelper.CreateButton("  Đánh dấu Vắng mặt / Hủy lượt (Cancelled)", IconChar.UserSlash, UiHelper.DangerRed, height: 40);
+            _btnCancelQueue = UiHelper.CreateButton("Đánh dấu Vắng mặt / Hủy lượt (Cancelled)", IconChar.UserSlash, UiHelper.DangerRed, height: 40);
+            _btnCancelQueue.AutoSize = false;
             _btnCancelQueue.Dock = DockStyle.Fill;
-            _btnCancelQueue.TextAlign = ContentAlignment.MiddleLeft;
-            _btnCancelQueue.Padding = new Padding(12, 0, 0, 0);
             _btnCancelQueue.Margin = new Padding(0, 0, 0, 8);
 
             var lblTip = new Label
@@ -337,6 +334,12 @@ namespace ClinicManagement.Views
                     {
                         e.Value = "Đang chờ";
                         e.CellStyle.ForeColor = UiHelper.WarningOrange;
+                        e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                    }
+                    else if (status == "Cancelled")
+                    {
+                        e.Value = "Vắng mặt / Đã hủy";
+                        e.CellStyle.ForeColor = UiHelper.DangerRed;
                         e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
                     }
                 }
@@ -483,11 +486,8 @@ namespace ClinicManagement.Views
             }
             else
             {
-                MessageBox.Show(
-                    $"Xem lịch sử bệnh án cũ của bệnh nhân: {_selectedQueueItem.PatientName} (Mã BN #{_selectedQueueItem.PatientId}).\n(Tính năng liên kết mở Screen #08 FormMedicalHistory)",
-                    "Tiền Sử Bệnh Án",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                using var frmHistory = new FormMedicalHistory(_selectedQueueItem.PatientName ?? string.Empty);
+                frmHistory.ShowDialog(this);
             }
         }
 

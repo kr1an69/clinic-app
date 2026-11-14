@@ -34,6 +34,8 @@ namespace ClinicManagement.Views
         {
             _initialKeyword = initialKeyword;
             InitializeComponent();
+            RegisterEvents();
+            LoadMedicalRecords(_initialKeyword);
         }
 
         private void InitializeComponent()
@@ -347,6 +349,143 @@ namespace ClinicManagement.Views
             detailLayout.Controls.Add(notesGrid, 0, 1);
             grpDetail.Controls.Add(detailLayout);
             return grpDetail;
+        }
+
+        // --- CÁC PHƯƠNG THỨC NGHIỆP VỤ & SỰ KIỆN ---
+
+        private void RegisterEvents()
+        {
+            _btnSearch.Click += (_, _) => LoadMedicalRecords(_txtSearchHistory.Text);
+            _btnRefresh.Click += (_, _) =>
+            {
+                _txtSearchHistory.Clear();
+                LoadMedicalRecords();
+            };
+
+            _txtSearchHistory.KeyDown += (_, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.SuppressKeyPress = true;
+                    LoadMedicalRecords(_txtSearchHistory.Text);
+                }
+            };
+
+            _dgvMedicalRecords.SelectionChanged += (_, _) => OnRecordSelectionChanged();
+        }
+
+        // Tải danh sách lịch sử bệnh án từ CSDL theo từ khóa
+        public void LoadMedicalRecords(string keyword = "")
+        {
+            try
+            {
+                var records = _controller.GetMedicalRecordsHistory(keyword);
+                _dgvMedicalRecords.Rows.Clear();
+
+                foreach (var rec in records)
+                {
+                    string recordCode = Convert.ToString(rec.RecordCode) ?? $"BA-{rec.Id:D3}";
+                    string createdAt = FormatDateTime(rec.CreatedAt);
+                    string patientName = Convert.ToString(rec.PatientName) ?? string.Empty;
+                    string phone = Convert.ToString(rec.Phone) ?? "---";
+                    string symptoms = Convert.ToString(rec.Symptoms) ?? string.Empty;
+                    string diagnosis = Convert.ToString(rec.Diagnosis) ?? string.Empty;
+                    double examFee = rec.ExamFee != null ? Convert.ToDouble(rec.ExamFee) : 50000;
+
+                    int rowIdx = _dgvMedicalRecords.Rows.Add(
+                        recordCode,
+                        createdAt,
+                        patientName,
+                        phone,
+                        symptoms,
+                        diagnosis,
+                        $"{examFee:N0} đ"
+                    );
+                    _dgvMedicalRecords.Rows[rowIdx].Tag = rec;
+                }
+
+                _lblRecordCount.Text = $"Tổng số: {records.Count} hồ sơ bệnh án";
+
+                if (_dgvMedicalRecords.Rows.Count > 0)
+                {
+                    _dgvMedicalRecords.Rows[0].Selected = true;
+                    OnRecordSelectionChanged();
+                }
+                else
+                {
+                    ResetDetailPanel();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khi tra cứu lịch sử bệnh án: {ex.Message}", "Lỗi CSDL", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // Hiển thị thông tin chi tiết khi chọn một dòng hồ sơ trên bảng
+        private void OnRecordSelectionChanged()
+        {
+            if (_dgvMedicalRecords.SelectedRows.Count == 0)
+            {
+                ResetDetailPanel();
+                return;
+            }
+
+            var row = _dgvMedicalRecords.SelectedRows[0];
+            if (row.Tag == null)
+            {
+                ResetDetailPanel();
+                return;
+            }
+
+            dynamic rec = row.Tag;
+            string recordCode = Convert.ToString(rec.RecordCode) ?? $"BA-{rec.Id:D3}";
+            string patientName = Convert.ToString(rec.PatientName) ?? string.Empty;
+            string gender = Convert.ToString(rec.Gender) ?? "---";
+            string birthYear = rec.BirthYear != null ? Convert.ToString(rec.BirthYear) : "---";
+            string phone = Convert.ToString(rec.Phone) ?? "---";
+            string createdAt = FormatDateTime(rec.CreatedAt);
+            string doctorName = Convert.ToString(rec.DoctorName) ?? "BS.CKI Nguyễn Văn An";
+            double examFee = rec.ExamFee != null ? Convert.ToDouble(rec.ExamFee) : 50000;
+
+            _lblDetailRecordCode.Text = $"Mã hồ sơ: {recordCode}";
+            _lblDetailPatient.Text = $"BN: {patientName} ({gender} - {birthYear}) | SĐT: {phone}";
+            _lblDetailDateAndDoctor.Text = $"Ngày khám: {createdAt} | BS: {doctorName}";
+            _lblDetailExamFee.Text = $"Tiền khám: {examFee:N0} đ";
+
+            _txtDetailSymptoms.Text = Convert.ToString(rec.Symptoms) ?? string.Empty;
+            _txtDetailDiagnosis.Text = Convert.ToString(rec.Diagnosis) ?? string.Empty;
+        }
+
+        private void ResetDetailPanel()
+        {
+            _lblDetailRecordCode.Text = "Mã hồ sơ: ---";
+            _lblDetailPatient.Text = "Bệnh nhân: Không có hồ sơ phù hợp";
+            _lblDetailDateAndDoctor.Text = "Ngày khám: --- | Bác sĩ: ---";
+            _lblDetailExamFee.Text = "Tiền khám: 0 đ";
+            _txtDetailSymptoms.Clear();
+            _txtDetailDiagnosis.Clear();
+        }
+
+        private static string FormatDateTime(object? rawValue)
+        {
+            if (rawValue == null)
+            {
+                return string.Empty;
+            }
+
+            if (rawValue is DateTime dt)
+            {
+                return dt.ToString("dd/MM/yyyy HH:mm");
+            }
+
+            string str = Convert.ToString(rawValue) ?? string.Empty;
+            if (DateTime.TryParse(str, out DateTime parsed))
+            {
+                return parsed.ToString("dd/MM/yyyy HH:mm");
+            }
+
+            return str;
         }
     }
 }
