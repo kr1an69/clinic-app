@@ -10,7 +10,11 @@ using FontAwesome.Sharp;
 
 namespace ClinicManagement.Views
 {
-    public class FormDoctor : Form
+    /// <summary>
+    /// SCREEN #07: BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC AUTOCOMPLETE
+    /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
+    /// </summary>
+    public class FormDoctor : BaseForm
     {
         private readonly DoctorController _controller = new();
         private QueueItem? _currentPatient;
@@ -56,11 +60,8 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Bác Sĩ Khám Bệnh & Kê Đơn Thuốc";
-            this.AutoScaleMode = AutoScaleMode.Dpi;
-            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
-            this.BackColor = Color.FromArgb(245, 247, 250);
-            this.Padding = new Padding(12);
             this.Dock = DockStyle.Fill;
+            this.Padding = UiHelper.Pad(12);
 
             // Bố cục chính chia 2 hàng: Thanh điều hướng phụ phía trên và Khu vực khám 2 cột phía dưới
             var mainLayout = new TableLayoutPanel

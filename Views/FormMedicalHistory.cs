@@ -8,7 +8,11 @@ using FontAwesome.Sharp;
 
 namespace ClinicManagement.Views
 {
-    public class FormMedicalHistory : Form
+    /// <summary>
+    /// SCREEN #08: TRA CỨU LỊCH SỬ KHÁM & HỒ SƠ BỆNH ÁN
+    /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
+    /// </summary>
+    public class FormMedicalHistory : BaseForm
     {
         private readonly DoctorController _controller = new();
         private readonly string _initialKeyword;
@@ -41,13 +45,8 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Tra Cứu Lịch Sử Khám & Hồ Sơ Bệnh Án";
-            this.Size = new Size(1220, 740);
-            this.MinimumSize = new Size(1020, 640);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.AutoScaleMode = AutoScaleMode.Dpi;
-            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
-            this.BackColor = Color.FromArgb(245, 247, 250);
-            this.Padding = new Padding(14);
+            this.ConfigureAsFullScreen(minBaseWidth: 1180, minBaseHeight: 680);
+            this.Padding = UiHelper.Pad(14);
 
             // Bố cục chính chia 3 hàng: Thanh tìm kiếm, Bảng danh sách bệnh án, Khung chi tiết bệnh án
             var mainLayout = new TableLayoutPanel
@@ -60,7 +59,7 @@ namespace ClinicManagement.Views
             mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 215F));
+            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(220)));
 
             var grpSearch = BuildSearchGroup();
             var grpRecordsGrid = BuildRecordsGridGroup();
@@ -76,17 +75,14 @@ namespace ClinicManagement.Views
         // 1. Xây dựng thanh công cụ tìm kiếm theo Tên hoặc SĐT bệnh nhân
         private GroupBox BuildSearchGroup()
         {
-            var grpSearch = new GroupBox
-            {
-                Text = "Tra Cứu Lịch Sử Khám Bệnh",
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                BackColor = Color.White,
-                Padding = new Padding(12, 8, 12, 10),
-                Margin = new Padding(0, 0, 0, 10)
-            };
+            var grpSearch = UiHelper.CreateGroupBox(
+                "Tra Cứu Lịch Sử Khám Bệnh",
+                titleColor: UiHelper.DarkText,
+                padding: UiHelper.Pad(12, 8, 12, 10),
+                margin: UiHelper.Pad(0, 0, 0, 10)
+            );
+            grpSearch.Dock = DockStyle.Top;
+            grpSearch.AutoSize = true;
 
             var toolbarLayout = new TableLayoutPanel
             {
@@ -104,26 +100,23 @@ namespace ClinicManagement.Views
                 AutoSize = true,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
-                Margin = new Padding(0)
+                Margin = Padding.Empty
             };
 
-            var lblSearch = new Label
-            {
-                Text = "Tìm theo Tên / SĐT Bệnh nhân:",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
-                Anchor = AnchorStyles.Left,
-                Margin = new Padding(0, 6, 8, 0)
-            };
+            var lblSearch = UiHelper.CreateLabel(
+                text: "Tìm theo Tên / SĐT Bệnh nhân:",
+                font: UiHelper.FontRegular,
+                margin: UiHelper.Pad(0, 6, 8, 0));
+            lblSearch.Anchor = AnchorStyles.Left;
 
             _txtSearchHistory = new TextBox
             {
-                Width = 300,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
+                Width = UiHelper.S(300),
+                Font = UiHelper.FontRegular,
                 PlaceholderText = "Nhập họ tên hoặc số điện thoại bệnh nhân...",
                 Text = _initialKeyword,
                 Anchor = AnchorStyles.Left,
-                Margin = new Padding(0, 4, 8, 0)
+                Margin = UiHelper.Pad(0, 4, 8, 0)
             };
 
             _btnSearch = UiHelper.CreateButton("Tra cứu bệnh án", IconChar.MagnifyingGlass, UiHelper.PrimaryBlue, 165, 34);
@@ -140,17 +133,14 @@ namespace ClinicManagement.Views
                 AutoSize = true,
                 FlowDirection = FlowDirection.RightToLeft,
                 WrapContents = false,
-                Margin = new Padding(0)
+                Margin = Padding.Empty
             };
 
-            _lblRecordCount = new Label
-            {
-                Text = "Tổng số: 0 hồ sơ bệnh án",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                ForeColor = UiHelper.PrimaryBlue,
-                Margin = new Padding(0, 8, 4, 0)
-            };
+            _lblRecordCount = UiHelper.CreateLabel(
+                text: "Tổng số: 0 hồ sơ bệnh án",
+                font: UiHelper.FontBold,
+                foreColor: UiHelper.PrimaryBlue,
+                margin: UiHelper.Pad(0, 8, 4, 0));
             rightFlow.Controls.Add(_lblRecordCount);
 
             toolbarLayout.Controls.Add(searchFlow, 0, 0);
@@ -162,42 +152,13 @@ namespace ClinicManagement.Views
         // 2. Xây dựng bảng DataGridView danh sách hồ sơ bệnh án
         private GroupBox BuildRecordsGridGroup()
         {
-            var grpGrid = new GroupBox
-            {
-                Text = "Danh Sách Hồ Sơ Bệnh Án Đã Lưu",
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                ForeColor = UiHelper.PrimaryBlue,
-                BackColor = Color.White,
-                Padding = new Padding(12, 8, 12, 12),
-                Margin = new Padding(0, 0, 0, 10)
-            };
+            var grpGrid = UiHelper.CreateGroupBox(
+                "Danh Sách Hồ Sơ Bệnh Án Đã Lưu",
+                padding: UiHelper.Pad(12, 8, 12, 12),
+                margin: UiHelper.Pad(0, 0, 0, 10)
+            );
 
-            _dgvMedicalRecords = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                AllowUserToResizeRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                RowHeadersVisible = false,
-                EnableHeadersVisualStyles = false,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
-                RowTemplate = { Height = 34 }
-            };
-
-            _dgvMedicalRecords.ColumnHeadersDefaultCellStyle.BackColor = UiHelper.PrimaryBlue;
-            _dgvMedicalRecords.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            _dgvMedicalRecords.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            _dgvMedicalRecords.ColumnHeadersHeight = 36;
-            _dgvMedicalRecords.DefaultCellStyle.SelectionBackColor = Color.FromArgb(214, 234, 248);
-            _dgvMedicalRecords.DefaultCellStyle.SelectionForeColor = UiHelper.DarkText;
-
+            _dgvMedicalRecords = UiHelper.CreateStandardGrid(baseRowHeight: 34, baseHeaderHeight: 36);
             _dgvMedicalRecords.Columns.Add(new DataGridViewTextBoxColumn { Name = "RecordCode", HeaderText = "Mã Hồ Sơ", FillWeight = 13 });
             _dgvMedicalRecords.Columns.Add(new DataGridViewTextBoxColumn { Name = "CreatedAt", HeaderText = "Ngày Giờ Khám", FillWeight = 19 });
             _dgvMedicalRecords.Columns.Add(new DataGridViewTextBoxColumn { Name = "PatientName", HeaderText = "Họ Tên Bệnh Nhân", FillWeight = 23 });
@@ -213,16 +174,12 @@ namespace ClinicManagement.Views
         // 3. Xây dựng khung xem chi tiết hồ sơ bệnh án đang chọn ở phía dưới
         private GroupBox BuildRecordDetailGroup()
         {
-            var grpDetail = new GroupBox
-            {
-                Text = "Chi Tiết Hồ Sơ Bệnh Án Đang Chọn",
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                BackColor = Color.White,
-                Padding = new Padding(12, 8, 12, 10),
-                Margin = new Padding(0)
-            };
+            var grpDetail = UiHelper.CreateGroupBox(
+                "Chi Tiết Hồ Sơ Bệnh Án Đang Chọn",
+                titleColor: UiHelper.DarkText,
+                padding: UiHelper.Pad(12, 8, 12, 10),
+                margin: Padding.Empty
+            );
 
             var detailLayout = new TableLayoutPanel
             {
@@ -231,59 +188,36 @@ namespace ClinicManagement.Views
                 RowCount = 2
             };
             detailLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            detailLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 42F));
+            detailLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             detailLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             // Thanh tóm tắt thông tin hành chính của ca khám
             var infoBar = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
+                AutoSize = true,
                 ColumnCount = 4,
                 RowCount = 1,
                 BackColor = Color.FromArgb(235, 245, 251),
-                Padding = new Padding(10, 6, 10, 6),
-                Margin = new Padding(0, 0, 0, 8)
+                Padding = UiHelper.Pad(10, 6, 10, 6),
+                Margin = UiHelper.Pad(0, 0, 0, 8)
             };
             infoBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18F));
             infoBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32F));
             infoBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 32F));
             infoBar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18F));
 
-            _lblDetailRecordCode = new Label
-            {
-                Text = "Mã hồ sơ: ---",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                ForeColor = UiHelper.PrimaryBlue,
-                Anchor = AnchorStyles.Left
-            };
+            _lblDetailRecordCode = UiHelper.CreateLabel("Mã hồ sơ: ---", font: UiHelper.FontBold, foreColor: UiHelper.PrimaryBlue);
+            _lblDetailRecordCode.Anchor = AnchorStyles.Left;
 
-            _lblDetailPatient = new Label
-            {
-                Text = "Bệnh nhân: Chưa chọn hồ sơ",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                Anchor = AnchorStyles.Left
-            };
+            _lblDetailPatient = UiHelper.CreateLabel("Bệnh nhân: Chưa chọn hồ sơ", font: UiHelper.FontBold);
+            _lblDetailPatient.Anchor = AnchorStyles.Left;
 
-            _lblDetailDateAndDoctor = new Label
-            {
-                Text = "Ngày khám: --- | Bác sĩ: ---",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
-                ForeColor = UiHelper.DarkText,
-                Anchor = AnchorStyles.Left
-            };
+            _lblDetailDateAndDoctor = UiHelper.CreateLabel("Ngày khám: --- | Bác sĩ: ---", font: UiHelper.FontRegular);
+            _lblDetailDateAndDoctor.Anchor = AnchorStyles.Left;
 
-            _lblDetailExamFee = new Label
-            {
-                Text = "Tiền khám: 0 đ",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                ForeColor = UiHelper.DangerRed,
-                Anchor = AnchorStyles.Right
-            };
+            _lblDetailExamFee = UiHelper.CreateLabel("Tiền khám: 0 đ", font: UiHelper.FontBold, foreColor: UiHelper.DangerRed);
+            _lblDetailExamFee.Anchor = AnchorStyles.Right;
 
             infoBar.Controls.Add(_lblDetailRecordCode, 0, 0);
             infoBar.Controls.Add(_lblDetailPatient, 1, 0);
@@ -296,28 +230,15 @@ namespace ClinicManagement.Views
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
                 RowCount = 2,
-                Margin = new Padding(0)
+                Margin = Padding.Empty
             };
             notesGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             notesGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            notesGrid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
+            notesGrid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             notesGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            notesGrid.Controls.Add(new Label
-            {
-                Text = "Triệu chứng lâm sàng ghi nhận:",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText
-            }, 0, 0);
-
-            notesGrid.Controls.Add(new Label
-            {
-                Text = "Kết luận chẩn đoán của bác sĩ:",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText
-            }, 1, 0);
+            var lblSymptomsHeader = UiHelper.CreateLabel("Triệu chứng lâm sàng ghi nhận:", font: UiHelper.FontLabelBold, margin: UiHelper.Pad(0, 0, 0, 3));
+            var lblDiagnosisHeader = UiHelper.CreateLabel("Kết luận chẩn đoán của bác sĩ:", font: UiHelper.FontLabelBold, margin: UiHelper.Pad(0, 0, 0, 3));
 
             _txtDetailSymptoms = new TextBox
             {
@@ -326,8 +247,8 @@ namespace ClinicManagement.Views
                 ReadOnly = true,
                 ScrollBars = ScrollBars.Vertical,
                 BackColor = Color.FromArgb(248, 250, 252),
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
-                Margin = new Padding(0, 0, 8, 0)
+                Font = UiHelper.FontRegular,
+                Margin = UiHelper.Pad(0, 0, 8, 0)
             };
 
             _txtDetailDiagnosis = new TextBox
@@ -337,11 +258,13 @@ namespace ClinicManagement.Views
                 ReadOnly = true,
                 ScrollBars = ScrollBars.Vertical,
                 BackColor = Color.FromArgb(248, 250, 252),
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+                Font = UiHelper.FontBold,
                 ForeColor = UiHelper.DarkText,
-                Margin = new Padding(0)
+                Margin = Padding.Empty
             };
 
+            notesGrid.Controls.Add(lblSymptomsHeader, 0, 0);
+            notesGrid.Controls.Add(lblDiagnosisHeader, 1, 0);
             notesGrid.Controls.Add(_txtDetailSymptoms, 0, 1);
             notesGrid.Controls.Add(_txtDetailDiagnosis, 1, 1);
 
@@ -355,7 +278,7 @@ namespace ClinicManagement.Views
 
         private void RegisterEvents()
         {
-            _btnSearch.Click += (_, _) => LoadMedicalRecords(_txtSearchHistory.Text);
+            _btnSearch.Click += (_, _) => LoadMedicalRecords(_txtSearchHistory.Text.Trim());
             _btnRefresh.Click += (_, _) =>
             {
                 _txtSearchHistory.Clear();
@@ -367,7 +290,7 @@ namespace ClinicManagement.Views
                 if (e.KeyCode == Keys.Enter)
                 {
                     e.SuppressKeyPress = true;
-                    LoadMedicalRecords(_txtSearchHistory.Text);
+                    LoadMedicalRecords(_txtSearchHistory.Text.Trim());
                 }
             };
 
