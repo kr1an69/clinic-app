@@ -10,7 +10,11 @@ using FontAwesome.Sharp;
 
 namespace ClinicManagement.Views
 {
-    public class FormDoctor : Form
+    /// <summary>
+    /// SCREEN #07: BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC AUTOCOMPLETE
+    /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
+    /// </summary>
+    public class FormDoctor : BaseForm
     {
         private readonly DoctorController _controller = new();
         private QueueItem? _currentPatient;
@@ -56,11 +60,8 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Bác Sĩ Khám Bệnh & Kê Đơn Thuốc";
-            this.AutoScaleMode = AutoScaleMode.Dpi;
-            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
-            this.BackColor = Color.FromArgb(245, 247, 250);
-            this.Padding = new Padding(12);
             this.Dock = DockStyle.Fill;
+            this.Padding = UiHelper.Pad(12);
 
             // Bố cục chính chia 2 hàng: Thanh điều hướng phụ phía trên và Khu vực khám 2 cột phía dưới
             var mainLayout = new TableLayoutPanel
@@ -413,6 +414,7 @@ namespace ClinicManagement.Views
                 UiHelper.SuccessGreen,
                 260,
                 42);
+            _btnSaveComplete.AutoSize = false;
             _btnSaveComplete.Dock = DockStyle.Fill;
             _btnSaveComplete.Margin = new Padding(0);
 
@@ -664,9 +666,9 @@ namespace ClinicManagement.Views
             if (_currentPatient == null)
             {
                 var waitingList = _controller.GetPatientsWaitingForDoctor();
-                // Ưu tiên chọn bệnh nhân đang ở trạng thái Examining, nếu chưa có thì lấy người đầu hàng đợi
+                // Ưu tiên chọn bệnh nhân đang ở trạng thái Examining, nếu chưa có thì lấy người đầu tiên đang Waiting
                 _currentPatient = waitingList.FirstOrDefault(q => q.Status == "Examining")
-                                  ?? waitingList.FirstOrDefault();
+                                  ?? waitingList.FirstOrDefault(q => q.Status == "Waiting");
             }
 
             BindCurrentPatientInfo();
@@ -996,11 +998,9 @@ namespace ClinicManagement.Views
 
         private void OpenMedicalHistoryDialog()
         {
-            MessageBox.Show(
-                "Màn hình Tra cứu Lịch sử khám & Hồ sơ bệnh án (FormMedicalHistory) sẽ được tích hợp ở bước tiếp theo.",
-                "Thông báo",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            string initialKeyword = _currentPatient?.PatientName ?? string.Empty;
+            using var frmHistory = new FormMedicalHistory(initialKeyword);
+            frmHistory.ShowDialog(this);
         }
 
         private void OpenPrescriptionListDialog()
