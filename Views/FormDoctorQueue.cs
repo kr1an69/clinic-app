@@ -352,7 +352,16 @@ namespace ClinicManagement.Views
                     _selectedQueueItem = item;
                     _lblQueueNumberBig.Text = $"STT: {item.QueueNumber:D2}";
                     _lblPatientName.Text = item.PatientName ?? "Chưa rõ tên";
-                    _lblPatientMeta.Text = $"Mã BN: #{item.PatientId} | SĐT: {item.Phone ?? "---"} | Trạng thái: {item.Status}";
+
+                    string statusVi = item.Status switch
+                    {
+                        "Examining" => "Đang khám",
+                        "Waiting" => "Đang chờ khám",
+                        "Cancelled" => "Vắng mặt / Đã hủy",
+                        _ => item.Status
+                    };
+
+                    _lblPatientMeta.Text = $"Mã BN: #{item.PatientId} | SĐT: {item.Phone ?? "---"} | Trạng thái: {statusVi}";
                     return;
                 }
             }
