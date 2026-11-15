@@ -373,7 +373,7 @@ namespace ClinicManagement.Views
         private void BtnOpenAlertReport_Click(object? sender, EventArgs e)
         {
             MessageBox.Show(
-                "Màn hình Báo cáo cảnh báo thuốc (#15 - FormStockAlertReport) sẽ được kết nối ở Commit 3.3.",
+                "Màn hình Báo cáo cảnh báo thuốc (#15 - FormStockAlertReport) is coming soon",
                 "Thông báo",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
