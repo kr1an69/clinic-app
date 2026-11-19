@@ -247,6 +247,7 @@ namespace ClinicManagement.Controllers
                     pd.PrescriptionId,
                     pd.MedicineId,
                     m.Name AS MedicineName,
+                    m.Unit,
                     pd.Quantity,
                     pd.Dosage,
                     pd.UnitPrice

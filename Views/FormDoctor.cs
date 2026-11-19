@@ -531,14 +531,15 @@ namespace ClinicManagement.Views
             inputBox.Controls.Add(inputGrid);
 
             // Bảng DataGridView hiển thị danh sách thuốc trong đơn dùng chuẩn UiHelper.CreateStandardGrid
-            _dgvPrescription = UiHelper.CreateStandardGrid(baseRowHeight: 34, baseHeaderHeight: 36);
-            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "Index", HeaderText = "STT", FillWeight = 12 });
+            _dgvPrescription = UiHelper.CreateStandardGrid(baseRowHeight: 34, baseHeaderHeight: 40);
+            _dgvPrescription.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "Index", HeaderText = "STT", FillWeight = 10 });
             _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "MedicineName", HeaderText = "Tên Thuốc & Hàm Lượng", FillWeight = 34 });
-            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "Unit", HeaderText = "ĐVT", FillWeight = 13 });
-            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "Quantity", HeaderText = "Số Lượng", FillWeight = 15 });
-            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "UnitPrice", HeaderText = "Đơn Giá", FillWeight = 18 });
-            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "Dosage", HeaderText = "Liều Dùng Chỉ Định", FillWeight = 38 });
-            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "SubTotal", HeaderText = "Thành Tiền", FillWeight = 20 });
+            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "Unit", HeaderText = "ĐVT", FillWeight = 12 });
+            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "Quantity", HeaderText = "Số Lượng", FillWeight = 16 });
+            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "UnitPrice", HeaderText = "Đơn Giá", FillWeight = 16 });
+            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "Dosage", HeaderText = "Liều Dùng Chỉ Định", FillWeight = 36 });
+            _dgvPrescription.Columns.Add(new DataGridViewTextBoxColumn { Name = "SubTotal", HeaderText = "Thành Tiền", FillWeight = 18 });
 
             layout.Controls.Add(inputBox, 0, 0);
             layout.Controls.Add(_dgvPrescription, 0, 1);
@@ -913,11 +914,9 @@ namespace ClinicManagement.Views
 
         private void OpenPrescriptionListDialog()
         {
-            MessageBox.Show(
-                "Màn hình Quản lý Đơn thuốc đã kê (FormPrescriptionList) sẽ được tích hợp ở bước tiếp theo.",
-                "Thông báo",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            string initialKeyword = _currentPatient?.PatientName ?? string.Empty;
+            using var frmPrescription = new FormPrescriptionList(initialKeyword);
+            frmPrescription.ShowDialog(this);
         }
 
         private void OpenMedicineViewDialog()
