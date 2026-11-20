@@ -33,9 +33,9 @@ namespace ClinicManagement.Controllers
         {
             using var conn = DbContext.GetConnection();
             const string sql = @"
-                 SELECT Id, FullName, Phone, Gender, BirthYear, Address, CreatedAt
+                 SELECT Id, FullName, Phone, Gender, BirthYear, Address, datetime(CreatedAt, 'localtime') AS CreatedAt
                  FROM Patients
-                 ORDER BY Id DESC";
+                 ORDER BY Id ASC";
             return conn.Query<Patient>(sql).ToList();
         }
         
@@ -44,7 +44,7 @@ namespace ClinicManagement.Controllers
         {
             using var conn = DbContext.GetConnection();
             const string sql = @"
-                 SELECT Id, FullName, Phone, Gender, BirthYear, Address, CreatedAt
+                 SELECT Id, FullName, Phone, Gender, BirthYear, Address, datetime(CreatedAt, 'localtime') AS CreatedAt
                  FROM Patients
                  WHERE Id = @Id";
             return conn.QueryFirstOrDefault<Patient>(sql, new { Id = id });
@@ -59,10 +59,10 @@ namespace ClinicManagement.Controllers
             }
             using var conn = DbContext.GetConnection();
             const string sql = @"
-                 SELECT Id, FullName, Phone, Gender, BirthYear, Address, CreatedAt
+                 SELECT Id, FullName, Phone, Gender, BirthYear, Address, datetime(CreatedAt, 'localtime') AS CreatedAt
                  FROM Patients
                  WHERE FullName LIKE @kw OR Phone LIKE @kw
-                 ORDER BY Id DESC";
+                 ORDER BY Id ASC";
             return conn.Query<Patient>(sql, new { kw = $"%{keyword.Trim()}%"}).ToList();
         }
 
@@ -163,22 +163,36 @@ namespace ClinicManagement.Controllers
                  ORDER BY q.QueueNumber ASC";
             return conn.Query<QueueItem>(sql, new { today = Today }).ToList();
         }
+        
+        public List<QueueItem> GetTodayAllQueues()
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT q.Id, q.PatientId, q.QueueNumber, q.QueueDate, q.Status,
+                       datetime(q.CreatedAt, 'localtime') AS CreatedAt,
+                       p.FullName AS PatientName, p.Phone
+                FROM Queues q
+                INNER JOIN Patients p ON q.PatientId = p.Id
+                WHERE q.QueueDate = @today
+                ORDER BY q.QueueNumber ASC";
+            return conn.Query<QueueItem>(sql, new { today = Today }).ToList();
+        }
 
         // Thống kê số lượng bệnh nhân khám theo ngày
         public List<DailyPatientReportItem> GetDailyPatientStatistics(DateTime? fromDate = null, DateTime? toDate = null)
         {
             using var conn = DbContext.GetConnection();
             const string sql = @"
-                 SELECT QueueDate AS ExamDate,
+                 SELECT DATE (QueueDate) AS ExamDate,
                         COUNT(*) AS TotalPatients,
                         SUM(CASE WHEN Status = 'Completed' THEN 1 ELSE 0 END) AS CompletedCount,
                         SUM(CASE WHEN Status IN( 'Waiting', 'Examining', 'PendingPayment') THEN 1 ELSE 0 END) AS WaitingCount
                  FROM Queues
-                 WHERE Status <> 'Canceled' 
-                   AND (@FromDate IS NULL OR QueueDate >= @FromDate)
-                   AND (@ToDate IS NULL OR QueueDate <= @ToDate)
-                 GROUP BY QueueDate
-                 ORDER BY QueueDate  DESC";
+                 WHERE Status <> 'Cancelled' 
+                   AND (@FromDate IS NULL OR DATE(QueueDate) >= @FromDate)
+                   AND (@ToDate IS NULL OR DATE(QueueDate) <= @ToDate)
+                 GROUP BY DATE(QueueDate)
+                 ORDER BY ExamDate  DESC";
             return conn.Query<DailyPatientReportItem>(sql, new
             {
                 FromDate = fromDate?.ToString("yyyy-MM-dd"), 

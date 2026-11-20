@@ -8,7 +8,7 @@ using ClinicManagement.Helpers;
 
 namespace ClinicManagement.Views
 {
-    public partial class FormLogin : Form
+    public class FormLogin : BaseForm
     {
         private readonly ReceptionController _controller = new();
 
@@ -28,30 +28,15 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Đăng Nhập & Phân Quyền";
-            this.AutoScaleDimensions = new SizeF(96F, 96F);
-            this.AutoScaleMode = AutoScaleMode.Dpi;
-            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
-            this.ClientSize = new Size(520, 700);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = true;
-            this.MinimumSize = new Size(480, 560);
+            this.ConfigureAsFixedDialog(baseWidth: 500, baseHeight: 640);
             this.BackColor = Color.FromArgb(238, 242, 246);
             
-            // Khung nền và thẻ
-            var rootPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(28),
-                BackColor = Color.FromArgb(238, 242, 246)
-            };
-
+            // Thẻ trung tâm
             var cardBox = new Panel
             {
-                Dock = DockStyle.None,
-                Size = new Size(520, 700),
+                Dock = DockStyle.Fill,
                 BackColor = Color.White,
-                Padding = new Padding(28, 20, 28, 20),
+                Padding = UiHelper.Pad(28, 20, 28, 20)
             };
 
             cardBox.Paint += (s, e) =>
@@ -65,9 +50,15 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
+                RowCount = 11,
                 BackColor = Color.Transparent
             };
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            
+            for (int i = 0; i < 11; i++)
+            {
+                layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            }
             
             // Logo và tiêu đề
             var iconBox = new IconPictureBox
@@ -75,48 +66,54 @@ namespace ClinicManagement.Views
                 IconChar = IconChar.HospitalUser,
                 IconFont = IconFont.Auto,
                 IconColor = UiHelper.PrimaryBlue,
-                IconSize = 52,
-                Size = new Size(52, 52),
+                IconSize = UiHelper.S(50),
+                Size = UiHelper.SSize(50, 50),
                 Anchor = AnchorStyles.None,
                 BackColor = Color.Transparent,
-                Margin = new Padding(0, 0, 0, 6)
+                Margin = UiHelper.Pad(0, 0, 0, 4)
             };
 
-            var lblTitle = new Label
-            {
-                Text = "ĐĂNG NHẬP PHÒNG KHÁM",
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                ForeColor = UiHelper.PrimaryBlue,
-                AutoSize = true,
-                Anchor = AnchorStyles.None,
-                Margin = new Padding(0, 0, 0, 2)
-            };
+            var lblTitle = UiHelper.CreateLabel(
+                text: "ĐĂNG NHẬP PHÒNG KHÁM",
+                font: new Font("Segoe UI", 14F, FontStyle.Bold),
+                foreColor: UiHelper.PrimaryBlue,
+                margin: UiHelper.Pad(0, 0, 0, 2)
+            );
+            lblTitle.Anchor = AnchorStyles.None;
 
-            var lblSubTitle = new Label
-            {
-                Text = "Hệ thống quản lý phòng khám và đơn thuốc",
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
-                ForeColor = UiHelper.SecondaryGray,
-                AutoSize = true,
-                Anchor = AnchorStyles.None,
-                Margin = new Padding(0, 0, 0, 18)
-            };
+            var lblSubTitle = UiHelper.CreateLabel(
+                text: "Hệ thống quản lý phòng khám và đơn thuốc",
+                font: UiHelper.FontRegular,
+                foreColor: UiHelper.SecondaryGray,
+                margin: UiHelper.Pad(0, 0, 0, 16)
+            );
+            lblSubTitle.Anchor = AnchorStyles.None;
             
             // Tài khoản
+            var lblUser = UiHelper.CreateLabel(
+                text: "Tên đăng nhập:",
+                font: UiHelper.FontBold,
+                margin: UiHelper.Pad(0, 0, 0, 3)
+            );
             _txtUsername = new TextBox
             {
-                Dock = DockStyle.Fill,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
                 Font = new Font("Segoe UI", 10.5F),
-                Margin = new Padding(0, 0, 0, 10),
+                Margin = UiHelper.Pad(0, 0, 0, 10),
                 Text = "admin"
             };
 
+            var lblPass = UiHelper.CreateLabel(
+                text: "Mật khẩu:",
+                font: UiHelper.FontBold,
+                margin: UiHelper.Pad(0, 0, 0, 3)
+            );
             _txtPassword = new TextBox
             {
-                Dock = DockStyle.Fill,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
                 Font = new Font("Segoe UI", 10.5F),
                 UseSystemPasswordChar = true,
-                Margin = new Padding(0, 0, 0, 4),
+                Margin = UiHelper.Pad(0, 0, 0, 4),
                 Text = "admin123"
             };
 
@@ -125,44 +122,41 @@ namespace ClinicManagement.Views
                 Text = "Hiển thị mật khẩu",
                 AutoSize = true,
                 Cursor = Cursors.Hand,
-                Margin = new Padding(0, 0, 0, 14),
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                Font = UiHelper.FontSmall,
+                Margin = UiHelper.Pad(0, 0, 0, 8)
             };
-
             _chkShowPassword.CheckedChanged += (s, e) =>
             {
                 _txtPassword.UseSystemPasswordChar = !_chkShowPassword.Checked;
             };
             
             // Thông báo lỗi và nút đăng nhập
-            _lblError = new Label
-            {
-                Text = string.Empty,
-                ForeColor = UiHelper.DangerRed,
-                Font = new Font("Segoe UI", 9F, FontStyle.Italic),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
+            _lblError = UiHelper.CreateLabel(
+                text: string.Empty,
+                font: new Font("Segoe UI", 9F, FontStyle.Italic),
+                foreColor: UiHelper.DangerRed,
+                margin: UiHelper.Pad(0, 0, 0, 6)
+            );
+            _lblError.Anchor = AnchorStyles.None;
 
-            _btnLogin = UiHelper.CreateButton("ĐĂNG NHẬP HỆ THỐNG", IconChar.RightToBracket, UiHelper.PrimaryBlue, 200, 44);
+            _btnLogin = UiHelper.CreateButton(
+                text: "ĐĂNG NHẬP HỆ THỐNG",
+                IconChar.RightToBracket,
+                backColor: UiHelper.PrimaryBlue,
+                minWidth: 200,
+                height: 42
+            );
             _btnLogin.Dock = DockStyle.Fill;
-            _btnLogin.TextAlign = ContentAlignment.MiddleCenter;
-            _btnLogin.AutoSize = false;
-            _btnLogin.Margin = new Padding(0);
+            _btnLogin.Margin = Padding.Empty;
             _btnLogin.Click += (s, e) => PerformLogin();
             this.AcceptButton = _btnLogin;
             
-            
             // Chọn tài khoản
-            var pnlAccounts = new GroupBox()
-            {
-                Text = "Chọn tài khoản:",
-                Dock = DockStyle.Fill,
-                ForeColor = UiHelper.SecondaryGray,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                Padding = new Padding(8, 6, 8, 8),
-                Margin = new Padding(0)
-            };
+            var grpAccounts = UiHelper.CreateGroupBox(
+                title: "Chọn tài khoản:",
+                titleColor: UiHelper.SecondaryGray,
+                margin: UiHelper.Pad(0, 14, 0, 0)
+            );
 
             var accountGrid = new TableLayoutPanel
             {
@@ -174,80 +168,29 @@ namespace ClinicManagement.Views
             accountGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             accountGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             accountGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            
             accountGrid.Controls.Add(CreateAccountBtn("Quản trị viên", "admin", "admin123", UiHelper.DarkText), 0, 0);
             accountGrid.Controls.Add(CreateAccountBtn("Lễ tân", "letan", "123", UiHelper.SecondaryGray), 1, 0);
             accountGrid.Controls.Add(CreateAccountBtn("Bác sĩ", "bacsi", "123", UiHelper.WarningOrange), 0, 1);
             accountGrid.Controls.Add(CreateAccountBtn("Dược sĩ", "duocsi", "123", UiHelper.SuccessGreen), 1, 1);
-            pnlAccounts.Controls.Add(accountGrid);
+            grpAccounts.Controls.Add(accountGrid);
             
             // Thêm vào bảng
-            layout.Controls.Add(iconBox);
-            layout.Controls.Add(lblTitle);
-            layout.Controls.Add(lblSubTitle);
-
-            layout.Controls.Add(new Label
-            {
-                Text = "Tên đăng nhập",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-            });
-            layout.Controls.Add(_txtUsername);
-
-            layout.Controls.Add(new Label
-            {
-                Text = "Mật khẩu",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-            });
-            layout.Controls.Add(_txtPassword);
-            layout.Controls.Add(_chkShowPassword);
-
-            _lblError.Height = 34;
-            layout.Controls.Add(_lblError);
-            
-            _btnLogin.Height = 48;
-            _btnLogin.TextAlign = ContentAlignment.MiddleCenter;
-            layout.Controls.Add(_btnLogin);
-            
-            layout.Controls.Add(new Panel
-                {
-                    Height = 14,
-                    Dock = DockStyle.Fill
-                });
-
-            pnlAccounts.Height = 120;  
-            layout.Controls.Add(pnlAccounts);
+            layout.Controls.Add(iconBox, 0, 0);
+            layout.Controls.Add(lblTitle, 0, 1);
+            layout.Controls.Add(lblSubTitle, 0, 2);
+            layout.Controls.Add(lblUser, 0, 3);
+            layout.Controls.Add(_txtUsername, 0, 4);
+            layout.Controls.Add(lblPass, 0, 5);
+            layout.Controls.Add(_txtPassword, 0, 6);
+            layout.Controls.Add(_chkShowPassword, 0, 7);
+            layout.Controls.Add(_lblError, 0, 8);
+            layout.Controls.Add(_btnLogin, 0, 9);
+            layout.Controls.Add(grpAccounts, 0, 10);
 
             cardBox.Controls.Add(layout);
-            rootPanel.Controls.Add(cardBox);
-
-            void CenterCard()
-            {
-                cardBox.Left = (rootPanel.ClientSize.Width - cardBox.Width) / 2;
-                cardBox.Top = (rootPanel.ClientSize.Height - cardBox.Height) / 2;
-            }
-            rootPanel.Resize += (s, e) => CenterCard();
-            CenterCard();
-            
-            this.Controls.Add(rootPanel);
+            this.Controls.Add(cardBox);
         }
-
-        private static void AddRow(TableLayoutPanel table, Control control, float absoluteHeight = 0)
-        {
-            int row = table.RowCount++;
-            table.RowStyles.Add(absoluteHeight > 0 ? new RowStyle(SizeType.Absolute, absoluteHeight) : new RowStyle(SizeType.AutoSize));
-            table.Controls.Add(control, 0, row);
-        }
-
-        private static Label MakeFieldLabel(string text) => new()
-        {
-            Text = text,
-            AutoSize = true,
-            Anchor = AnchorStyles.Left,
-            Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-            ForeColor = UiHelper.DarkText,
-            Margin = new Padding(0, 0, 0, 4)
-        };
 
         private Button CreateAccountBtn(string text, string u, string p, Color c)
         {
@@ -255,11 +198,11 @@ namespace ClinicManagement.Views
             {
                 Text = text,
                 Dock = DockStyle.Fill,
-                Margin = new Padding(3),
+                Margin = UiHelper.Pad(2),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = c,
                 ForeColor = Color.White,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+                Font = UiHelper.FontSmallBold,
                 Cursor = Cursors.Hand
             };
             btn.FlatAppearance.BorderSize = 0;
