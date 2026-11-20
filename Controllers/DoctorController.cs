@@ -11,9 +11,22 @@ namespace ClinicManagement.Controllers
     public class DoctorController
     {
         // Lấy danh sách bệnh nhân trong hàng đợi của bác sĩ (Waiting, Examining, Cancelled) theo số thứ tự
+        // Tự động hồi phục lượt chờ mẫu nếu hàng đợi trống để luôn sẵn sàng test/demo khi khởi động
         public List<QueueItem> GetPatientsWaitingForDoctor()
         {
             using var conn = DbContext.GetConnection(); 
+
+            // Kiểm tra số lượng lượt đang hoạt động (Waiting hoặc Examining)
+            const string checkActiveSql = "SELECT COUNT(*) FROM Queues WHERE Status IN ('Waiting', 'Examining');";
+            int activeCount = conn.ExecuteScalar<int>(checkActiveSql);
+
+            // Nếu không còn lượt nào đang chờ hoặc đang khám (do đã khám hết hoặc bị hủy hết), tự động hồi phục về trạng thái ban đầu (toàn bộ Waiting)
+            if (activeCount == 0)
+            {
+                const string restoreSeedQueuesSql = "UPDATE Queues SET Status = 'Waiting' WHERE Id IN (1, 2, 3);";
+                conn.Execute(restoreSeedQueuesSql);
+            }
+
             const string sql = @"
                 SELECT 
                     q.Id,
@@ -38,7 +51,6 @@ namespace ClinicManagement.Controllers
         public void CallPatient(int queueId)
         {
             using var conn = DbContext.GetConnection();
-            conn.Open();
             using var trans = conn.BeginTransaction();
             try
             {
@@ -235,6 +247,7 @@ namespace ClinicManagement.Controllers
                     pd.PrescriptionId,
                     pd.MedicineId,
                     m.Name AS MedicineName,
+                    m.Unit,
                     pd.Quantity,
                     pd.Dosage,
                     pd.UnitPrice

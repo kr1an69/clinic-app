@@ -78,8 +78,9 @@ namespace ClinicManagement.Models
         public string? Dosage { get; set; }
         public double UnitPrice { get; set; }
 
-        // Tên thuốc & thành tiền hiển thị trên DataGridView
+        // Tên thuốc, đơn vị tính & thành tiền hiển thị trên DataGridView
         public string? MedicineName { get; set; }
+        public string? Unit { get; set; }
         public double SubTotal => Quantity * UnitPrice;
     }
 
