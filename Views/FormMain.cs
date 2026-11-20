@@ -85,7 +85,7 @@ namespace ClinicManagement.Views
                 AutoSize = true,
                 UseMnemonic = false,
                 ForeColor = Color.White,
-                Font = new Font("Segoe UI", 14.5F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 12.5F, FontStyle.Bold),
                 TextAlign = ContentAlignment.MiddleLeft,
                 Anchor = AnchorStyles.Left,
                 Margin = Padding.Empty
