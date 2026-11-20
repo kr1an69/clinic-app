@@ -311,7 +311,7 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 ReadOnly = true,
-                Text = "BS.CKI Nguyễn Văn An",
+                Text = AppSession.CurrentUser?.FullName ?? "BS.CKI Nguyễn Văn An",
                 BackColor = UiHelper.MutedInputBg,
                 Font = UiHelper.FontRegular
             };
@@ -838,7 +838,7 @@ namespace ClinicManagement.Views
                 var record = new MedicalRecord
                 {
                     PatientId = _currentPatient.PatientId,
-                    DoctorId = 3, // BS.CKI Nguyễn Văn An trong seed_clinic_data.sql
+                    DoctorId = AppSession.CurrentUser?.Id ?? 3, // Bác sĩ đang đăng nhập hoặc ID 3 mặc định (BS.CKI Nguyễn Văn An)
                     QueueId = _currentPatient.Id,
                     Symptoms = symptoms,
                     Diagnosis = diagnosis,
@@ -914,8 +914,7 @@ namespace ClinicManagement.Views
 
         private void OpenPrescriptionListDialog()
         {
-            string initialKeyword = _currentPatient?.PatientName ?? string.Empty;
-            using var frmPrescription = new FormPrescriptionList(initialKeyword);
+            using var frmPrescription = new FormPrescriptionList(string.Empty);
             frmPrescription.ShowDialog(this);
         }
 

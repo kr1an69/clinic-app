@@ -45,7 +45,7 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Quản Lý & Chi Tiết Đơn Thuốc Đã Kê";
-            this.ConfigureAsFullScreen(minBaseWidth: 1180, minBaseHeight: 680);
+            this.ConfigureAsFixedDialog(baseWidth: 1100, baseHeight: 650);
             this.Padding = UiHelper.Pad(14);
 
             // Bố cục chính chia 2 hàng: Thanh tìm kiếm (AutoSize) và Khung Master-Detail (co giãn 100%)
@@ -296,11 +296,11 @@ namespace ClinicManagement.Views
 
                 foreach (var item in prescriptions)
                 {
-                    string code = Convert.ToString(item.PrescriptionCode) ?? $"DT-{item.Id:D3}";
-                    string patient = Convert.ToString(item.PatientName) ?? string.Empty;
-                    string diagnosis = Convert.ToString(item.Diagnosis) ?? string.Empty;
-                    double total = Convert.ToDouble(item.TotalAmount);
-                    string status = Convert.ToString(item.DispensedStatus) ?? (item.IsDispensed == 1 ? "Đã xuất thuốc" : "Chờ thu phí");
+                    string code = !string.IsNullOrEmpty(item.PrescriptionCode) ? item.PrescriptionCode : $"DT-{item.Id:D3}";
+                    string patient = item.PatientName;
+                    string diagnosis = item.Diagnosis ?? string.Empty;
+                    double total = item.TotalAmount;
+                    string status = !string.IsNullOrEmpty(item.DispensedStatus) ? item.DispensedStatus : (item.IsDispensed == 1 ? "Đã xuất thuốc" : "Chờ thu phí");
 
                     int rowIdx = _dgvPrescriptions.Rows.Add(
                         code,
@@ -340,17 +340,16 @@ namespace ClinicManagement.Views
             }
 
             var row = _dgvPrescriptions.SelectedRows[0];
-            if (row.Tag == null)
+            if (row.Tag is not PrescriptionListItem item)
             {
                 ResetDetails();
                 return;
             }
 
-            dynamic item = row.Tag;
-            int prescriptionId = Convert.ToInt32(item.Id);
-            string code = Convert.ToString(item.PrescriptionCode) ?? $"DT-{prescriptionId:D3}";
-            string patientName = Convert.ToString(item.PatientName) ?? string.Empty;
-            double totalAmount = Convert.ToDouble(item.TotalAmount);
+            int prescriptionId = item.Id;
+            string code = !string.IsNullOrEmpty(item.PrescriptionCode) ? item.PrescriptionCode : $"DT-{prescriptionId:D3}";
+            string patientName = item.PatientName;
+            double totalAmount = item.TotalAmount;
 
             _grpDetails.Text = $"CHI TIẾT THUỐC TRONG ĐƠN #{code} - BN: {patientName}";
             _lblDetailTotalAmount.Text = $"TỔNG TIỀN THUỐC TRONG ĐƠN: {totalAmount:N0} đ";

@@ -54,7 +54,7 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Hàng Đợi Khám Bệnh - Bác Sĩ";
-            this.ConfigureAsFullScreen(minBaseWidth: 1180, minBaseHeight: 680);
+            this.ConfigureAsFixedDialog(baseWidth: 1150, baseHeight: 680);
 
             var bannerPanel = UiHelper.CreateHeaderBanner(
                 title: "DANH SÁCH CHỜ KHÁM & ĐIỀU PHỐI GỌI BỆNH NHÂN (BS)",
