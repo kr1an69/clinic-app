@@ -920,11 +920,8 @@ namespace ClinicManagement.Views
 
         private void OpenMedicineViewDialog()
         {
-            MessageBox.Show(
-                "Màn hình Tra cứu Danh mục thuốc & Tồn kho (FormDoctorMedicineView) sẽ được tích hợp ở bước tiếp theo.",
-                "Thông báo",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            using var frmMedicine = new FormDoctorMedicineView();
+            frmMedicine.ShowDialog(this);
         }
     }
 }
