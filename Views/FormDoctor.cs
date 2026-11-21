@@ -11,7 +11,7 @@ using FontAwesome.Sharp;
 namespace ClinicManagement.Views
 {
     /// <summary>
-    /// SCREEN #07: BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC AUTOCOMPLETE
+    /// BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC AUTOCOMPLETE
     /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
     /// </summary>
     public class FormDoctor : BaseForm
