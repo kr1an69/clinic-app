@@ -26,7 +26,6 @@ namespace ClinicManagement.Views
         private TextBox _txtSearch = null!;
         private ComboBox _cboUnitFilter = null!;
         private IconButton _btnFilter = null!;
-        private IconButton _btnRefresh = null!;
         private Label _lblMedicineCount = null!;
 
         // Bảng danh mục thuốc khả dụng (StockQuantity > 0)
@@ -133,18 +132,13 @@ namespace ClinicManagement.Views
 
             _btnFilter = UiHelper.CreateButton("Lọc danh sách", IconChar.Filter, UiHelper.PrimaryBlue, 138, 34);
             _btnFilter.Anchor = AnchorStyles.Left;
-            _btnFilter.Margin = UiHelper.Pad(0, 0, 8, 0);
-
-            _btnRefresh = UiHelper.CreateButton("Hiển thị tất cả", IconChar.Rotate, Color.FromArgb(52, 73, 94), 142, 34);
-            _btnRefresh.Anchor = AnchorStyles.Left;
-            _btnRefresh.Margin = Padding.Empty;
+            _btnFilter.Margin = Padding.Empty;
 
             filterFlow.Controls.Add(lblSearch);
             filterFlow.Controls.Add(_txtSearch);
             filterFlow.Controls.Add(lblUnit);
             filterFlow.Controls.Add(_cboUnitFilter);
             filterFlow.Controls.Add(_btnFilter);
-            filterFlow.Controls.Add(_btnRefresh);
 
             _lblMedicineCount = UiHelper.CreateLabel(
                 text: "Tổng số: 0 loại thuốc",
@@ -280,7 +274,7 @@ namespace ClinicManagement.Views
 
         private void RegisterEvents()
         {
-            _txtSearch.TextChanged += (_, _) => ApplyFilter();
+            _btnFilter.Click += (_, _) => ApplyFilter();
             _txtSearch.KeyDown += (_, e) =>
             {
                 if (e.KeyCode == Keys.Enter)
@@ -288,18 +282,6 @@ namespace ClinicManagement.Views
                     e.SuppressKeyPress = true;
                     ApplyFilter();
                 }
-            };
-
-            _cboUnitFilter.SelectedIndexChanged += (_, _) => ApplyFilter();
-            _btnFilter.Click += (_, _) => ApplyFilter();
-            _btnRefresh.Click += (_, _) =>
-            {
-                _txtSearch.Clear();
-                if (_cboUnitFilter.Items.Count > 0)
-                {
-                    _cboUnitFilter.SelectedIndex = 0;
-                }
-                LoadMedicines();
             };
 
             _dgvDoctorMedicines.CellFormatting += DgvDoctorMedicines_CellFormatting;
@@ -351,9 +333,18 @@ namespace ClinicManagement.Views
             _cboUnitFilter.EndUpdate();
         }
 
-        // Lọc danh sách theo từ khóa tên/mã thuốc và đơn vị tính
+        // Lọc danh sách theo từ khóa tên/mã thuốc và đơn vị tính (chỉ kích hoạt khi bấm nút Lọc danh sách hoặc nhấn Enter)
         public void ApplyFilter()
         {
+            try
+            {
+                _allAvailableMedicines = _controller.GetAllMedicinesForPrescription();
+            }
+            catch
+            {
+                // Giữ lại danh sách hiện tại nếu kết nối tạm bận
+            }
+
             string keyword = _txtSearch.Text.Trim();
             string selectedUnit = _cboUnitFilter.SelectedItem?.ToString() ?? AllUnitsOption;
             bool filterByUnit = !string.Equals(selectedUnit, AllUnitsOption, StringComparison.Ordinal);

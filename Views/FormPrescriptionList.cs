@@ -45,8 +45,8 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Quản Lý & Chi Tiết Đơn Thuốc Đã Kê";
-            this.ConfigureAsFixedDialog(baseWidth: 1100, baseHeight: 650);
-            this.Padding = UiHelper.Pad(14);
+            this.ConfigureAsFixedDialog(baseWidth: 1260, baseHeight: 680);
+            this.Padding = UiHelper.Pad(12);
 
             // Bố cục chính chia 2 hàng: Thanh tìm kiếm (AutoSize) và Khung Master-Detail (co giãn 100%)
             var mainLayout = new TableLayoutPanel
@@ -90,6 +90,7 @@ namespace ClinicManagement.Views
             };
             toolbarLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbarLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            toolbarLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             var searchFlow = new FlowLayoutPanel
             {
@@ -108,7 +109,7 @@ namespace ClinicManagement.Views
 
             _txtSearch = new TextBox
             {
-                Width = UiHelper.S(280),
+                Width = UiHelper.S(300),
                 Font = UiHelper.FontRegular,
                 PlaceholderText = "Nhập tên bệnh nhân hoặc chẩn đoán...",
                 Anchor = AnchorStyles.Left,
@@ -116,10 +117,10 @@ namespace ClinicManagement.Views
             };
 
             _btnSearch = UiHelper.CreateButton("Tìm kiếm đơn thuốc", IconChar.MagnifyingGlass, UiHelper.PrimaryBlue, 175, 34);
-            _btnSearch.Margin = UiHelper.Pad(0, 0, 6, 4);
+            _btnSearch.Margin = UiHelper.Pad(0, 0, 6, 0);
 
             _btnRefresh = UiHelper.CreateButton("Hiển thị tất cả", IconChar.Rotate, Color.FromArgb(52, 73, 94), 145, 34);
-            _btnRefresh.Margin = UiHelper.Pad(0, 0, 6, 4);
+            _btnRefresh.Margin = UiHelper.Pad(0, 0, 6, 0);
 
             searchFlow.Controls.Add(lblSearch);
             searchFlow.Controls.Add(_txtSearch);
@@ -181,12 +182,58 @@ namespace ClinicManagement.Views
                 margin: UiHelper.Pad(0, 0, 8, 0)
             );
 
-            _dgvPrescriptions = UiHelper.CreateStandardGrid(baseRowHeight: 34, baseHeaderHeight: 36);
-            _dgvPrescriptions.Columns.Add(new DataGridViewTextBoxColumn { Name = "PrescriptionCode", HeaderText = "Mã Đơn", FillWeight = 16 });
-            _dgvPrescriptions.Columns.Add(new DataGridViewTextBoxColumn { Name = "PatientName", HeaderText = "Bệnh Nhân", FillWeight = 26 });
-            _dgvPrescriptions.Columns.Add(new DataGridViewTextBoxColumn { Name = "Diagnosis", HeaderText = "Chẩn Đoán", FillWeight = 26 });
-            _dgvPrescriptions.Columns.Add(new DataGridViewTextBoxColumn { Name = "TotalAmount", HeaderText = "Tổng Tiền Thuốc", FillWeight = 20 });
-            _dgvPrescriptions.Columns.Add(new DataGridViewTextBoxColumn { Name = "DispensedStatus", HeaderText = "Trạng Thái Xuất", FillWeight = 20 });
+            _dgvPrescriptions = UiHelper.CreateStandardGrid(baseRowHeight: 34, baseHeaderHeight: 44);
+            _dgvPrescriptions.ShowCellToolTips = true;
+            _dgvPrescriptions.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            _dgvPrescriptions.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            _dgvPrescriptions.ColumnHeadersDefaultCellStyle.Padding = UiHelper.Pad(4, 2, 4, 2);
+            _dgvPrescriptions.DefaultCellStyle.Padding = UiHelper.Pad(4, 2, 4, 2);
+            _dgvPrescriptions.DefaultCellStyle.ForeColor = UiHelper.DarkText;
+
+            var colCode = new DataGridViewTextBoxColumn
+            {
+                Name = "PrescriptionCode",
+                HeaderText = "Mã Đơn",
+                FillWeight = 13,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+            colCode.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            var colPatient = new DataGridViewTextBoxColumn
+            {
+                Name = "PatientName",
+                HeaderText = "Bệnh Nhân",
+                FillWeight = 25,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+
+            var colDiagnosis = new DataGridViewTextBoxColumn
+            {
+                Name = "Diagnosis",
+                HeaderText = "Chẩn Đoán",
+                FillWeight = 23,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+
+            var colTotal = new DataGridViewTextBoxColumn
+            {
+                Name = "TotalAmount",
+                HeaderText = "Tổng Tiền",
+                FillWeight = 17,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+            colTotal.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            var colStatus = new DataGridViewTextBoxColumn
+            {
+                Name = "DispensedStatus",
+                HeaderText = "Trạng Thái",
+                FillWeight = 22,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+            colStatus.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            _dgvPrescriptions.Columns.AddRange(colCode, colPatient, colDiagnosis, colTotal, colStatus);
 
             grpMaster.Controls.Add(_dgvPrescriptions);
             return grpMaster;
@@ -205,28 +252,82 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 2
+                RowCount = 2,
+                Margin = Padding.Empty
             };
             detailLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             detailLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            detailLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            detailLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(42)));
 
-            _dgvPrescriptionDetails = UiHelper.CreateStandardGrid(baseRowHeight: 34, baseHeaderHeight: 36);
-            _dgvPrescriptionDetails.Columns.Add(new DataGridViewTextBoxColumn { Name = "Index", HeaderText = "STT", FillWeight = 10 });
-            _dgvPrescriptionDetails.Columns.Add(new DataGridViewTextBoxColumn { Name = "MedicineName", HeaderText = "Tên Thuốc & Hàm Lượng", FillWeight = 32 });
-            _dgvPrescriptionDetails.Columns.Add(new DataGridViewTextBoxColumn { Name = "Quantity", HeaderText = "Số Lượng", FillWeight = 16 });
-            _dgvPrescriptionDetails.Columns.Add(new DataGridViewTextBoxColumn { Name = "UnitPrice", HeaderText = "Đơn Giá", FillWeight = 18 });
-            _dgvPrescriptionDetails.Columns.Add(new DataGridViewTextBoxColumn { Name = "SubTotal", HeaderText = "Thành Tiền", FillWeight = 20 });
-            _dgvPrescriptionDetails.Columns.Add(new DataGridViewTextBoxColumn { Name = "Dosage", HeaderText = "Liều Dùng Chỉ Định", FillWeight = 34 });
+            _dgvPrescriptionDetails = UiHelper.CreateStandardGrid(baseRowHeight: 34, baseHeaderHeight: 44);
+            _dgvPrescriptionDetails.ShowCellToolTips = true;
+            _dgvPrescriptionDetails.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
+            _dgvPrescriptionDetails.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            _dgvPrescriptionDetails.ColumnHeadersDefaultCellStyle.Padding = UiHelper.Pad(4, 2, 4, 2);
+            _dgvPrescriptionDetails.DefaultCellStyle.Padding = UiHelper.Pad(4, 2, 4, 2);
+            _dgvPrescriptionDetails.DefaultCellStyle.ForeColor = UiHelper.DarkText;
+
+            var colIndex = new DataGridViewTextBoxColumn
+            {
+                Name = "Index",
+                HeaderText = "STT",
+                FillWeight = 7,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+            colIndex.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            var colMedName = new DataGridViewTextBoxColumn
+            {
+                Name = "MedicineName",
+                HeaderText = "Tên Thuốc & Hàm Lượng",
+                FillWeight = 32,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+
+            var colQty = new DataGridViewTextBoxColumn
+            {
+                Name = "Quantity",
+                HeaderText = "Số Lượng",
+                FillWeight = 12,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+            colQty.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            var colUnitPrice = new DataGridViewTextBoxColumn
+            {
+                Name = "UnitPrice",
+                HeaderText = "Đơn Giá",
+                FillWeight = 14,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+            colUnitPrice.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            var colSubTotal = new DataGridViewTextBoxColumn
+            {
+                Name = "SubTotal",
+                HeaderText = "Thành Tiền",
+                FillWeight = 15,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+            colSubTotal.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            var colDosage = new DataGridViewTextBoxColumn
+            {
+                Name = "Dosage",
+                HeaderText = "Liều Dùng Chỉ Định",
+                FillWeight = 20,
+                SortMode = DataGridViewColumnSortMode.NotSortable
+            };
+
+            _dgvPrescriptionDetails.Columns.AddRange(colIndex, colMedName, colQty, colUnitPrice, colSubTotal, colDosage);
 
             // Thanh tóm tắt tổng tiền thuốc bên dưới
             var summaryBar = new Panel
             {
                 Dock = DockStyle.Fill,
-                AutoSize = true,
                 BackColor = Color.FromArgb(235, 245, 251),
-                Padding = UiHelper.Pad(10, 8, 10, 8),
-                Margin = UiHelper.Pad(0, 8, 0, 0)
+                Padding = UiHelper.Pad(12, 6, 12, 6),
+                Margin = UiHelper.Pad(0, 6, 0, 0)
             };
 
             _lblDetailTotalAmount = UiHelper.CreateLabel(
@@ -234,6 +335,7 @@ namespace ClinicManagement.Views
                 font: new Font("Segoe UI", 10F, FontStyle.Bold),
                 foreColor: UiHelper.DangerRed);
             _lblDetailTotalAmount.Dock = DockStyle.Right;
+            _lblDetailTotalAmount.TextAlign = ContentAlignment.MiddleRight;
 
             summaryBar.Controls.Add(_lblDetailTotalAmount);
 
@@ -266,21 +368,41 @@ namespace ClinicManagement.Views
 
             _dgvPrescriptions.SelectionChanged += (_, _) => OnPrescriptionSelectionChanged();
 
-            // Định dạng màu sắc cột Trạng Thái Xuất (Chờ thu phí: Cam, Đã xuất: Xanh lá)
+            // Định dạng màu sắc cột Trạng Thái (Chờ thu phí: Cam, Đã xuất: Xanh lá) & Tooltip hiển thị đầy đủ
             _dgvPrescriptions.CellFormatting += (_, e) =>
             {
-                if (e.RowIndex >= 0 && _dgvPrescriptions.Columns[e.ColumnIndex].Name == "DispensedStatus")
+                if (e.RowIndex >= 0)
                 {
-                    string status = Convert.ToString(e.Value) ?? string.Empty;
-                    if (status.Contains("Chờ thu phí"))
+                    var col = _dgvPrescriptions.Columns[e.ColumnIndex];
+                    if (col.Name == "Diagnosis" && e.Value != null)
                     {
-                        e.CellStyle.ForeColor = UiHelper.WarningOrange;
-                        e.CellStyle.Font = UiHelper.FontBold;
+                        _dgvPrescriptions.Rows[e.RowIndex].Cells[e.ColumnIndex].ToolTipText = e.Value.ToString();
                     }
-                    else if (status.Contains("Đã xuất"))
+                    else if (col.Name == "DispensedStatus")
                     {
-                        e.CellStyle.ForeColor = UiHelper.SuccessGreen;
-                        e.CellStyle.Font = UiHelper.FontBold;
+                        string status = Convert.ToString(e.Value) ?? string.Empty;
+                        if (status.Contains("Chờ thu phí"))
+                        {
+                            e.CellStyle.ForeColor = UiHelper.WarningOrange;
+                            e.CellStyle.Font = UiHelper.FontBold;
+                        }
+                        else if (status.Contains("Đã xuất"))
+                        {
+                            e.CellStyle.ForeColor = UiHelper.SuccessGreen;
+                            e.CellStyle.Font = UiHelper.FontBold;
+                        }
+                    }
+                }
+            };
+
+            _dgvPrescriptionDetails.CellFormatting += (_, e) =>
+            {
+                if (e.RowIndex >= 0)
+                {
+                    var col = _dgvPrescriptionDetails.Columns[e.ColumnIndex];
+                    if ((col.Name == "MedicineName" || col.Name == "Dosage") && e.Value != null)
+                    {
+                        _dgvPrescriptionDetails.Rows[e.RowIndex].Cells[e.ColumnIndex].ToolTipText = e.Value.ToString();
                     }
                 }
             };
