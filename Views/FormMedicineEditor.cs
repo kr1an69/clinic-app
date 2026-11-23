@@ -497,6 +497,26 @@ namespace ClinicManagement.Views
                 return;
             }
 
+            if (unitPrice < 0 || stockQty < 0 || minAlert < 0)
+            {
+                MessageBox.Show("Đơn giá, tồn kho và mức cảnh báo phải lớn hơn hoặc bằng 0!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_dtpNewExpiry.Value.Date < DateTime.Today)
+            {
+                var confirmExpired = MessageBox.Show(
+                    "Hạn sử dụng đang chọn nhỏ hơn ngày hiện tại (thuốc đã hết hạn).\nBạn có chắc chắn muốn tiếp tục lưu không?",
+                    "Cảnh báo hạn sử dụng",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+                if (confirmExpired != DialogResult.Yes)
+                {
+                    _dtpNewExpiry.Focus();
+                    return;
+                }
+            }
+
             var newMedicine = new Medicine
             {
                 Code = code,
@@ -554,6 +574,25 @@ namespace ClinicManagement.Views
 
             double? newPrice = _chkUpdatePrice.Checked ? (double)_nudRestockPrice.Value : null;
             string? newExpiry = _chkUpdateExpiry.Checked ? _dtpRestockExpiry.Value.ToString("yyyy-MM-dd") : null;
+
+            if (newPrice.HasValue && newPrice.Value < 0)
+            {
+                MessageBox.Show("Đơn giá mới phải lớn hơn hoặc bằng 0!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_chkUpdateExpiry.Checked && _dtpRestockExpiry.Value.Date < DateTime.Today)
+            {
+                var confirmExpired = MessageBox.Show(
+                    "Hạn sử dụng mới đang chọn nhỏ hơn ngày hiện tại.\nBạn có chắc chắn muốn cập nhật không?",
+                    "Cảnh báo hạn sử dụng",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+                if (confirmExpired != DialogResult.Yes)
+                {
+                    return;
+                }
+            }
 
             try
             {
