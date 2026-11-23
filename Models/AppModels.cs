@@ -84,6 +84,20 @@ namespace ClinicManagement.Models
         public double SubTotal => Quantity * UnitPrice;
     }
 
+    public class PrescriptionListItem
+    {
+        public int Id { get; set; }
+        public string PrescriptionCode { get; set; } = string.Empty;
+        public int MedicalRecordId { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Diagnosis { get; set; }
+        public double TotalAmount { get; set; }
+        public int IsDispensed { get; set; }
+        public string DispensedStatus { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+    }
+
     public class Invoice
     {
         public int Id { get; set; }

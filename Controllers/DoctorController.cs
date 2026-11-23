@@ -10,22 +10,11 @@ namespace ClinicManagement.Controllers
     //BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC
     public class DoctorController
     {
-        // Lấy danh sách bệnh nhân trong hàng đợi của bác sĩ (Waiting, Examining, Cancelled) theo số thứ tự
-        // Tự động hồi phục lượt chờ mẫu nếu hàng đợi trống để luôn sẵn sàng test/demo khi khởi động
+        // Lấy danh sách bệnh nhân trong hàng đợi hôm nay của bác sĩ (Waiting, Examining, Cancelled) theo số thứ tự
         public List<QueueItem> GetPatientsWaitingForDoctor()
         {
             using var conn = DbContext.GetConnection(); 
-
-            // Kiểm tra số lượng lượt đang hoạt động (Waiting hoặc Examining)
-            const string checkActiveSql = "SELECT COUNT(*) FROM Queues WHERE Status IN ('Waiting', 'Examining');";
-            int activeCount = conn.ExecuteScalar<int>(checkActiveSql);
-
-            // Nếu không còn lượt nào đang chờ hoặc đang khám (do đã khám hết hoặc bị hủy hết), tự động hồi phục về trạng thái ban đầu (toàn bộ Waiting)
-            if (activeCount == 0)
-            {
-                const string restoreSeedQueuesSql = "UPDATE Queues SET Status = 'Waiting' WHERE Id IN (1, 2, 3);";
-                conn.Execute(restoreSeedQueuesSql);
-            }
+            var today = DateTime.Now.ToString("yyyy-MM-dd");
 
             const string sql = @"
                 SELECT 
@@ -39,27 +28,32 @@ namespace ClinicManagement.Controllers
                     p.Phone
                 FROM Queues q
                 INNER JOIN Patients p ON q.PatientId = p.Id
-                WHERE q.Status IN ('Waiting', 'Examining', 'Cancelled')
+                WHERE (q.QueueDate = date('now') OR q.QueueDate = date('now', 'localtime') OR q.QueueDate = @Today)
+                  AND q.Status IN ('Waiting', 'Examining', 'Cancelled')
                 ORDER BY 
                     CASE WHEN q.Status = 'Cancelled' THEN 1 ELSE 0 END ASC,
                     q.QueueDate DESC, 
                     q.QueueNumber ASC;";
-            return conn.Query<QueueItem>(sql).ToList();
+            return conn.Query<QueueItem>(sql, new { Today = today }).ToList();
         }
 
-        // Cập nhật trạng thái hàng đợi: chuyển bệnh nhân đang khám cũ về 'Waiting', chỉ duy nhất bệnh nhân mới được gọi chuyển sang 'Examining'
+        // Cập nhật trạng thái hàng đợi: chuyển bệnh nhân đang khám cũ trong ngày về 'Waiting', chỉ duy nhất bệnh nhân mới được gọi chuyển sang 'Examining'
         public void CallPatient(int queueId)
         {
             using var conn = DbContext.GetConnection();
             using var trans = conn.BeginTransaction();
             try
             {
-                // 1. Chuyển tất cả lượt đang Examining hiện tại trở về Waiting (tránh 2 bệnh nhân khám cùng lúc)
+                var today = DateTime.Now.ToString("yyyy-MM-dd");
+
+                // 1. Chuyển tất cả lượt đang Examining trong ngày hiện tại trở về Waiting (tránh 2 bệnh nhân khám cùng lúc)
                 const string resetOtherExaminingSql = @"
                     UPDATE Queues
                     SET Status = 'Waiting'
-                    WHERE Status = 'Examining' AND Id <> @QueueId;";
-                conn.Execute(resetOtherExaminingSql, new { QueueId = queueId }, trans);
+                    WHERE Status = 'Examining' 
+                      AND Id <> @QueueId
+                      AND (QueueDate = date('now') OR QueueDate = date('now', 'localtime') OR QueueDate = @Today);";
+                conn.Execute(resetOtherExaminingSql, new { QueueId = queueId, Today = today }, trans);
 
                 // 2. Chuyển duy nhất lượt được gọi sang Examining
                 const string setExaminingSql = @"
@@ -213,7 +207,7 @@ namespace ClinicManagement.Controllers
             return conn.Query<dynamic>(sql, new { Keyword = keyword.Trim() }).ToList();
         }
         //Lấy danh sách các đơn thuốc đã kê (Master)
-        public List<dynamic> GetAllPrescriptions(string keyword = "")
+        public List<PrescriptionListItem> GetAllPrescriptions(string keyword = "")
         {
             using var conn = DbContext.GetConnection();
             const string sql = @"
@@ -235,7 +229,7 @@ namespace ClinicManagement.Controllers
                        OR p.FullName LIKE '%' || @Keyword || '%' 
                        OR mr.Diagnosis LIKE '%' || @Keyword || '%')
                 ORDER BY pr.Id DESC;";
-            return conn.Query<dynamic>(sql, new { Keyword = keyword.Trim() }).ToList();
+            return conn.Query<PrescriptionListItem>(sql, new { Keyword = keyword.Trim() }).ToList();
         }
         //Lấy chi tiết các loại thuốc trong 1 đơn thuốc cụ thể (Detail)
         public List<PrescriptionDetail> GetPrescriptionDetailsById(int prescriptionId)

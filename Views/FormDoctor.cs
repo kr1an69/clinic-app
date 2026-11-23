@@ -11,7 +11,7 @@ using FontAwesome.Sharp;
 namespace ClinicManagement.Views
 {
     /// <summary>
-    /// SCREEN #07: BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC AUTOCOMPLETE
+    /// BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC AUTOCOMPLETE
     /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
     /// </summary>
     public class FormDoctor : BaseForm
@@ -108,8 +108,8 @@ namespace ClinicManagement.Views
             var grpToolbar = UiHelper.CreateGroupBox(
                 "Điều Phối Khám Bệnh & Tra Cứu Nhanh",
                 titleColor: UiHelper.DarkText,
-                padding: UiHelper.Pad(12, 6, 12, 10),
-                margin: UiHelper.Pad(0, 0, 0, 10)
+                padding: UiHelper.Pad(12, 6, 12, 8),
+                margin: UiHelper.Pad(0, 0, 0, 8)
             );
             grpToolbar.Dock = DockStyle.Top;
             grpToolbar.AutoSize = true;
@@ -123,6 +123,7 @@ namespace ClinicManagement.Views
             };
             toolbarLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbarLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            toolbarLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             // Nút chọn bệnh nhân từ Hàng đợi bên trái
             var leftFlow = new FlowLayoutPanel
@@ -130,12 +131,12 @@ namespace ClinicManagement.Views
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = true,
+                WrapContents = false,
                 Margin = Padding.Empty
             };
 
             _btnOpenQueue = UiHelper.CreateButton("Hàng Đợi & Gọi Khám", IconChar.BellConcierge, UiHelper.PrimaryBlue, 180, 36);
-            _btnOpenQueue.Margin = UiHelper.Pad(0, 0, 8, 4);
+            _btnOpenQueue.Margin = UiHelper.Pad(0, 0, 8, 0);
             leftFlow.Controls.Add(_btnOpenQueue);
 
             // Các nút mở màn hình tra cứu bên phải
@@ -144,18 +145,18 @@ namespace ClinicManagement.Views
                 Dock = DockStyle.Fill,
                 AutoSize = true,
                 FlowDirection = FlowDirection.RightToLeft,
-                WrapContents = true,
+                WrapContents = false,
                 Margin = Padding.Empty
             };
 
             _btnOpenMedicineView = UiHelper.CreateButton("Tra Cứu Thuốc & Tồn Kho", IconChar.Capsules, Color.FromArgb(52, 73, 94), 195, 36);
-            _btnOpenMedicineView.Margin = UiHelper.Pad(6, 0, 0, 4);
+            _btnOpenMedicineView.Margin = UiHelper.Pad(6, 0, 0, 0);
 
             _btnOpenPrescriptionList = UiHelper.CreateButton("Đơn Thuốc Đã Kê", IconChar.FilePrescription, UiHelper.WarningOrange, 160, 36);
-            _btnOpenPrescriptionList.Margin = UiHelper.Pad(6, 0, 0, 4);
+            _btnOpenPrescriptionList.Margin = UiHelper.Pad(6, 0, 0, 0);
 
             _btnOpenHistory = UiHelper.CreateButton("Lịch Sử Bệnh Án", IconChar.NotesMedical, UiHelper.PrimaryBlue, 155, 36);
-            _btnOpenHistory.Margin = UiHelper.Pad(6, 0, 0, 4);
+            _btnOpenHistory.Margin = UiHelper.Pad(6, 0, 0, 0);
 
             rightFlow.Controls.Add(_btnOpenMedicineView);
             rightFlow.Controls.Add(_btnOpenPrescriptionList);
@@ -311,7 +312,7 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 ReadOnly = true,
-                Text = "BS.CKI Nguyễn Văn An",
+                Text = AppSession.CurrentUser?.FullName ?? "BS.CKI Nguyễn Văn An",
                 BackColor = UiHelper.MutedInputBg,
                 Font = UiHelper.FontRegular
             };
@@ -838,7 +839,7 @@ namespace ClinicManagement.Views
                 var record = new MedicalRecord
                 {
                     PatientId = _currentPatient.PatientId,
-                    DoctorId = 3, // BS.CKI Nguyễn Văn An trong seed_clinic_data.sql
+                    DoctorId = AppSession.CurrentUser?.Id ?? 3, // Bác sĩ đang đăng nhập hoặc ID 3 mặc định (BS.CKI Nguyễn Văn An)
                     QueueId = _currentPatient.Id,
                     Symptoms = symptoms,
                     Diagnosis = diagnosis,
@@ -914,18 +915,14 @@ namespace ClinicManagement.Views
 
         private void OpenPrescriptionListDialog()
         {
-            string initialKeyword = _currentPatient?.PatientName ?? string.Empty;
-            using var frmPrescription = new FormPrescriptionList(initialKeyword);
+            using var frmPrescription = new FormPrescriptionList(string.Empty);
             frmPrescription.ShowDialog(this);
         }
 
         private void OpenMedicineViewDialog()
         {
-            MessageBox.Show(
-                "Màn hình Tra cứu Danh mục thuốc & Tồn kho (FormDoctorMedicineView) sẽ được tích hợp ở bước tiếp theo.",
-                "Thông báo",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            using var frmMedicine = new FormDoctorMedicineView();
+            frmMedicine.ShowDialog(this);
         }
     }
 }
