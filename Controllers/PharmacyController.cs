@@ -66,5 +66,59 @@ namespace ClinicManagement.Controllers
                 WHERE UPPER(Code) = UPPER(@Code) AND (@ExcludeId IS NULL OR Id <> @ExcludeId);";
             return conn.ExecuteScalar<int>(sql, new { Code = code.Trim(), ExcludeId = excludeId }) > 0;
         }
+
+        // Lấy danh sách đơn thuốc đang chờ thu phí và xuất kho
+        public List<PendingPrescriptionItem> GetPendingPrescriptions(string keyword = "")
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT
+                    p.Id AS PrescriptionId,
+                    p.MedicalRecordId,
+                    mr.QueueId,
+                    q.QueueNumber,
+                    pat.FullName AS PatientName,
+                    pat.Phone,
+                    mr.Diagnosis,
+                    COALESCE(mr.ExamFee, 0) AS ExamFee,
+                    COALESCE(p.TotalAmount, 0) AS MedicineFee,
+                    p.CreatedAt
+                FROM Prescriptions p
+                INNER JOIN MedicalRecords mr ON p.MedicalRecordId = mr.Id
+                INNER JOIN Patients pat ON mr.PatientId = pat.Id
+                LEFT JOIN Queues q ON mr.QueueId = q.Id
+                WHERE p.IsDispensed = 0
+                  AND (@Keyword = '' OR pat.FullName LIKE @LikePattern OR COALESCE(pat.Phone, '') LIKE @LikePattern)
+                ORDER BY p.CreatedAt ASC, p.Id ASC;";
+
+            var trimmed = keyword.Trim();
+            return conn.Query<PendingPrescriptionItem>(sql, new
+            {
+                Keyword = trimmed,
+                LikePattern = $"%{trimmed}%"
+            }).ToList();
+        }
+
+        // Lấy chi tiết các loại thuốc trong một đơn thuốc kèm tồn kho hiện tại
+        public List<PrescriptionDetail> GetPrescriptionDetails(int prescriptionId)
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT
+                    pd.Id,
+                    pd.PrescriptionId,
+                    pd.MedicineId,
+                    pd.Quantity,
+                    pd.Dosage,
+                    pd.UnitPrice,
+                    m.Name AS MedicineName,
+                    m.Unit,
+                    m.StockQuantity
+                FROM PrescriptionDetails pd
+                INNER JOIN Medicines m ON pd.MedicineId = m.Id
+                WHERE pd.PrescriptionId = @PrescriptionId
+                ORDER BY pd.Id ASC;";
+            return conn.Query<PrescriptionDetail>(sql, new { PrescriptionId = prescriptionId }).ToList();
+        }
     }
 }
