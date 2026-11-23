@@ -120,5 +120,146 @@ namespace ClinicManagement.Controllers
                 ORDER BY pd.Id ASC;";
             return conn.Query<PrescriptionDetail>(sql, new { PrescriptionId = prescriptionId }).ToList();
         }
+
+        // Thu phí, trừ tồn kho thuốc, tạo hóa đơn và hoàn tất lượt khám bằng Transaction
+        public int ProcessPaymentAndDispense(int prescriptionId, int? cashierId)
+        {
+            if (prescriptionId <= 0)
+            {
+                throw new ArgumentException("Mã đơn thuốc không hợp lệ.", nameof(prescriptionId));
+            }
+
+            using var conn = DbContext.GetConnection();
+            conn.Open();
+            using var transaction = conn.BeginTransaction();
+
+            try
+            {
+                const string selectPrescriptionSql = @"
+                    SELECT
+                        p.Id AS PrescriptionId,
+                        p.MedicalRecordId,
+                        p.IsDispensed,
+                        mr.QueueId,
+                        COALESCE(mr.ExamFee, 0) AS ExamFee
+                    FROM Prescriptions p
+                    INNER JOIN MedicalRecords mr ON p.MedicalRecordId = mr.Id
+                    WHERE p.Id = @PrescriptionId;";
+
+                var prescription = conn.QueryFirstOrDefault<PrescriptionCheckoutInfo>(
+                    selectPrescriptionSql,
+                    new { PrescriptionId = prescriptionId },
+                    transaction);
+
+                if (prescription == null)
+                {
+                    throw new InvalidOperationException("Không tìm thấy đơn thuốc cần thanh toán.");
+                }
+
+                if (prescription.IsDispensed == 1)
+                {
+                    throw new InvalidOperationException("Đơn thuốc này đã được thanh toán và xuất kho trước đó.");
+                }
+
+                const string selectDetailsSql = @"
+                    SELECT
+                        pd.MedicineId,
+                        pd.Quantity,
+                        pd.UnitPrice,
+                        m.Name AS MedicineName,
+                        m.StockQuantity
+                    FROM PrescriptionDetails pd
+                    INNER JOIN Medicines m ON pd.MedicineId = m.Id
+                    WHERE pd.PrescriptionId = @PrescriptionId;";
+
+                var details = conn.Query<PrescriptionDetail>(
+                    selectDetailsSql,
+                    new { PrescriptionId = prescriptionId },
+                    transaction).ToList();
+
+                const string deductStockSql = @"
+                    UPDATE Medicines
+                    SET StockQuantity = StockQuantity - @Quantity
+                    WHERE Id = @MedicineId AND StockQuantity >= @Quantity;";
+
+                foreach (var item in details)
+                {
+                    if (item.Quantity <= 0)
+                    {
+                        throw new InvalidOperationException($"Số lượng xuất của thuốc '{item.MedicineName}' phải lớn hơn 0.");
+                    }
+
+                    var affectedRows = conn.Execute(
+                        deductStockSql,
+                        new { item.MedicineId, item.Quantity },
+                        transaction);
+
+                    if (affectedRows == 0)
+                    {
+                        throw new InvalidOperationException(
+                            $"Thuốc '{item.MedicineName}' không đủ tồn kho (cần {item.Quantity}, hiện còn {item.StockQuantity}).");
+                    }
+                }
+
+                var medicineFee = details.Sum(d => d.Quantity * d.UnitPrice);
+                var totalAmount = prescription.ExamFee + medicineFee;
+
+                const string insertInvoiceSql = @"
+                    INSERT INTO Invoices (MedicalRecordId, PrescriptionId, ExamFee, MedicineFee, TotalAmount, CashierId)
+                    VALUES (@MedicalRecordId, @PrescriptionId, @ExamFee, @MedicineFee, @TotalAmount, @CashierId);
+                    SELECT last_insert_rowid();";
+
+                var invoiceId = conn.ExecuteScalar<int>(
+                    insertInvoiceSql,
+                    new
+                    {
+                        prescription.MedicalRecordId,
+                        PrescriptionId = prescriptionId,
+                        prescription.ExamFee,
+                        MedicineFee = medicineFee,
+                        TotalAmount = totalAmount,
+                        CashierId = cashierId
+                    },
+                    transaction);
+
+                const string updatePrescriptionSql = @"
+                    UPDATE Prescriptions
+                    SET IsDispensed = 1,
+                        TotalAmount = @MedicineFee
+                    WHERE Id = @PrescriptionId;";
+
+                conn.Execute(
+                    updatePrescriptionSql,
+                    new { PrescriptionId = prescriptionId, MedicineFee = medicineFee },
+                    transaction);
+
+                if (prescription.QueueId.HasValue)
+                {
+                    const string updateQueueSql = @"
+                        UPDATE Queues
+                        SET Status = 'Completed'
+                        WHERE Id = @QueueId;";
+
+                    conn.Execute(updateQueueSql, new { QueueId = prescription.QueueId.Value }, transaction);
+                }
+
+                transaction.Commit();
+                return invoiceId;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
+
+        private class PrescriptionCheckoutInfo
+        {
+            public int PrescriptionId { get; set; }
+            public int MedicalRecordId { get; set; }
+            public int IsDispensed { get; set; }
+            public int? QueueId { get; set; }
+            public double ExamFee { get; set; }
+        }
     }
 }
