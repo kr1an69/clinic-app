@@ -23,6 +23,26 @@ namespace ClinicManagement.Controllers
         // Thêm thuốc mới vào kho
         public void AddMedicine(Medicine medicine)
         {
+            if (medicine == null)
+            {
+                throw new ArgumentNullException(nameof(medicine));
+            }
+
+            if (string.IsNullOrWhiteSpace(medicine.Code) || string.IsNullOrWhiteSpace(medicine.Name))
+            {
+                throw new ArgumentException("Mã thuốc và tên thuốc không được để trống.");
+            }
+
+            if (medicine.UnitPrice < 0 || medicine.StockQuantity < 0 || medicine.MinStockAlert < 0)
+            {
+                throw new ArgumentException("Đơn giá, số lượng tồn và định mức cảnh báo phải lớn hơn hoặc bằng 0.");
+            }
+
+            if (IsMedicineCodeExists(medicine.Code))
+            {
+                throw new InvalidOperationException($"Mã thuốc '{medicine.Code}' đã tồn tại trong kho.");
+            }
+
             using var conn = DbContext.GetConnection();
             const string sql = @"
                 INSERT INTO Medicines (Code, Name, Unit, UnitPrice, StockQuantity, MinStockAlert, ExpiryDate)
@@ -46,6 +66,21 @@ namespace ClinicManagement.Controllers
         // Nhập bổ sung số lượng tồn kho và cập nhật giá/hạn dùng mới (nếu có)
         public void RestockMedicine(int medicineId, int addQuantity, double? newPrice = null, string? newExpiryDate = null)
         {
+            if (medicineId <= 0)
+            {
+                throw new ArgumentException("Mã thuốc không hợp lệ.", nameof(medicineId));
+            }
+
+            if (addQuantity <= 0)
+            {
+                throw new ArgumentException("Số lượng nhập thêm phải lớn hơn 0.", nameof(addQuantity));
+            }
+
+            if (newPrice.HasValue && newPrice.Value < 0)
+            {
+                throw new ArgumentException("Đơn giá mới không được âm.", nameof(newPrice));
+            }
+
             using var conn = DbContext.GetConnection();
             const string sql = @"
                 UPDATE Medicines

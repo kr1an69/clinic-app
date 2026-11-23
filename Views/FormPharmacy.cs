@@ -395,6 +395,21 @@ namespace ClinicManagement.Views
                 return;
             }
 
+            // Làm mới chi tiết đơn thuốc từ CSDL để kiểm tra tồn kho thực tế trước khi xuất
+            RefreshSelectedDetails();
+            var outOfStockItems = _currentDetails.Where(d => d.RemainingStock < 0).ToList();
+            if (outOfStockItems.Count > 0)
+            {
+                var detailLines = string.Join("\n", outOfStockItems.Select(d =>
+                    $"- {d.MedicineName}: cần {d.Quantity} {d.Unit ?? "Viên"}, hiện còn {d.StockQuantity}"));
+                MessageBox.Show(
+                    $"Không thể xuất kho vì các thuốc sau không đủ tồn:\n{detailLines}\n\nVui lòng nhập bổ sung tồn kho trước khi thanh toán.",
+                    "Thiếu tồn kho",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
             var totalText = _lblTotalAmount.Text;
             var confirm = MessageBox.Show(
                 $"Xác nhận thu {totalText} và xuất kho cho đơn #{_selectedPrescription.PrescriptionId} của bệnh nhân {_selectedPrescription.PatientName}?",
