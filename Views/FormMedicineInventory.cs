@@ -372,11 +372,9 @@ namespace ClinicManagement.Views
         // Mở màn hình báo cáo cảnh báo thuốc (#15)
         private void BtnOpenAlertReport_Click(object? sender, EventArgs e)
         {
-            MessageBox.Show(
-                "Màn hình Báo cáo cảnh báo thuốc (#15 - FormStockAlertReport) is coming soon",
-                "Thông báo",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            using var reportForm = new FormStockAlertReport();
+            reportForm.ShowDialog(this);
+            LoadMedicines();
         }
     }
 }
