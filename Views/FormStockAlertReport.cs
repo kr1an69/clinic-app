@@ -197,7 +197,7 @@ namespace ClinicManagement.Views
                 Margin = UiHelper.Pad(0, 10, 0, 0)
             };
 
-            _btnRestockSelected = UiHelper.CreateButton("Nhập Bổ Sung Thuốc (#14)", IconChar.Plus, UiHelper.SuccessGreen, 225, 36);
+            _btnRestockSelected = UiHelper.CreateButton("Nhập Bổ Sung Thuốc", IconChar.Plus, UiHelper.SuccessGreen, 200, 36);
             _btnRestockSelected.Click += BtnRestockSelected_Click;
 
             _btnRefresh = UiHelper.CreateButton("Làm mới", IconChar.RotateRight, UiHelper.PrimaryBlue, 115, 36);
@@ -260,7 +260,7 @@ namespace ClinicManagement.Views
             _btnClose = UiHelper.CreateTextButton("Đóng", UiHelper.SecondaryGray, 95, 36);
             _btnClose.Click += (_, _) => this.Close();
 
-            _btnReprintInvoice = UiHelper.CreateButton("Xem & In Lại Hóa Đơn (#12)", IconChar.Print, UiHelper.PrimaryBlue, 235, 36);
+            _btnReprintInvoice = UiHelper.CreateButton("Xem & In Lại Hóa Đơn", IconChar.Print, UiHelper.PrimaryBlue, 210, 36);
             _btnReprintInvoice.Click += (_, _) => OpenSelectedInvoicePreview();
 
             bottomFlow.Controls.Add(_btnClose);

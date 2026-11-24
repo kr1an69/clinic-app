@@ -20,6 +20,7 @@ namespace ClinicManagement.Views
         private TextBox _txtSearch = null!;
         private IconButton _btnRefresh = null!;
         private IconButton _btnOpenInventory = null!;
+        private IconButton _btnOpenStockAlert = null!;
         private DataGridView _dgvPending = null!;
         private DataGridView _dgvDetails = null!;
 
@@ -150,14 +151,24 @@ namespace ClinicManagement.Views
                 Margin = UiHelper.Pad(0, 10, 0, 0)
             };
 
-            _btnOpenInventory = UiHelper.CreateButton("Quản lý Kho Thuốc", IconChar.BoxesStacked, UiHelper.SecondaryGray, 210, 36);
+            _btnOpenInventory = UiHelper.CreateButton("Quản lý Kho Thuốc", IconChar.BoxesStacked, UiHelper.SecondaryGray, 200, 36);
             _btnOpenInventory.Click += (_, _) =>
             {
                 using var frmInventory = new FormMedicineInventory();
                 frmInventory.ShowDialog(this);
                 RefreshSelectedDetails();
             };
+
+            _btnOpenStockAlert = UiHelper.CreateButton("Báo cáo & Sổ HĐ", IconChar.TriangleExclamation, UiHelper.WarningOrange, 175, 36);
+            _btnOpenStockAlert.Click += (_, _) =>
+            {
+                using var frmAlert = new FormStockAlertReport();
+                frmAlert.ShowDialog(this);
+                RefreshSelectedDetails();
+            };
+
             bottomBar.Controls.Add(_btnOpenInventory);
+            bottomBar.Controls.Add(_btnOpenStockAlert);
 
             leftLayout.Controls.Add(searchBar, 0, 0);
             leftLayout.Controls.Add(_dgvPending, 0, 1);

@@ -11,7 +11,7 @@ using FontAwesome.Sharp;
 
 namespace ClinicManagement.Views
 {
-    public class FormMedicineInventory : Form
+    public class FormMedicineInventory : BaseForm
     {
         private readonly PharmacyController _controller = new();
         private List<Medicine> _allMedicines = new();
@@ -31,76 +31,81 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Quản Lý Danh Mục Kho Thuốc";
-            this.Size = new Size(1280, 760);
-            this.MinimumSize = new Size(1280, 760);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.WindowState = FormWindowState.Maximized;
-            this.AutoScaleMode = AutoScaleMode.Dpi;
-            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
-            this.BackColor = Color.FromArgb(245, 247, 250);
-            this.Padding = new Padding(14);
+            this.ConfigureAsFullScreen(minBaseWidth: 1180, minBaseHeight: 680);
 
-            // Bố cục chính chia 2 hàng: Thanh công cụ tìm kiếm phía trên và Bảng dữ liệu phía dưới
+            // Bố cục chính gồm Header Banner và vùng nội dung 2 hàng
+            var rootLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 2,
+                BackColor = UiHelper.BgMain,
+                Padding = Padding.Empty,
+                Margin = Padding.Empty
+            };
+            rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            var headerBanner = UiHelper.CreateHeaderBanner(
+                "QUẢN LÝ DANH MỤC KHO THUỐC",
+                "Tra cứu tồn kho, theo dõi cảnh báo cận hạn dùng / sắp hết hàng và nhập bổ sung thuốc");
+
             var mainLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 2,
-                BackColor = Color.Transparent
+                BackColor = Color.Transparent,
+                Padding = UiHelper.Pad(14),
+                Margin = Padding.Empty
             };
             mainLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             // 1. Khu vực thanh tìm kiếm và nút chức năng
-            var grpToolbar = new GroupBox
-            {
-                Text = "Tra cứu & Thao tác Kho Dược",
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                BackColor = Color.White,
-                Padding = new Padding(12, 8, 12, 10),
-                Margin = new Padding(0, 0, 0, 10)
-            };
+            var grpToolbar = UiHelper.CreateGroupBox(
+                "Tra cứu & Thao tác Kho Dược",
+                UiHelper.DarkText,
+                UiHelper.Pad(12, 8, 12, 10),
+                UiHelper.Pad(0, 0, 0, 10));
+            grpToolbar.Dock = DockStyle.Top;
+            grpToolbar.AutoSize = true;
+            grpToolbar.AutoSizeMode = AutoSizeMode.GrowAndShrink;
 
             var toolbarLayout = new TableLayoutPanel
             {
-                Dock = DockStyle.Fill,
+                Dock = DockStyle.Top,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 ColumnCount = 2,
-                RowCount = 1
+                RowCount = 1,
+                Margin = Padding.Empty
             };
             toolbarLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbarLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            toolbarLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             // Cụm tìm kiếm bên trái
             var searchFlow = new FlowLayoutPanel
             {
-                Dock = DockStyle.Fill,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
-                Margin = new Padding(0)
+                Margin = Padding.Empty
             };
 
-            var lblSearch = new Label
-            {
-                Text = "Tìm Mã / Tên thuốc:",
-                AutoSize = true,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
-                Anchor = AnchorStyles.Left,
-                Margin = new Padding(0, 6, 8, 0)
-            };
+            var lblSearch = UiHelper.CreateLabel("Tìm Mã / Tên thuốc:", UiHelper.FontRegular, UiHelper.DarkText, UiHelper.Pad(0, 7, 8, 0));
 
             _txtSearchMed = new TextBox
             {
-                Width = 240,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
+                Width = UiHelper.S(240),
+                Font = UiHelper.FontRegular,
                 PlaceholderText = "Gõ mã hoặc tên thuốc...",
-                Anchor = AnchorStyles.Left,
-                Margin = new Padding(0, 4, 8, 0)
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 8, 0)
             };
             _txtSearchMed.TextChanged += (_, _) => ApplyFilter();
 
@@ -116,9 +121,10 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlowDirection = FlowDirection.RightToLeft,
                 WrapContents = false,
-                Margin = new Padding(0)
+                Margin = Padding.Empty
             };
 
             _btnOpenAlertReport = UiHelper.CreateButton("Xem Báo Cáo Cảnh Báo", IconChar.TriangleExclamation, UiHelper.WarningOrange, 230);
@@ -135,22 +141,18 @@ namespace ClinicManagement.Views
             grpToolbar.Controls.Add(toolbarLayout);
 
             // 2. Khu vực bảng danh mục thuốc
-            var grpGrid = new GroupBox
-            {
-                Text = "Toàn Bộ Danh Mục Thuốc Trong Kho",
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                BackColor = Color.White,
-                Padding = new Padding(12, 8, 12, 12),
-                Margin = new Padding(0)
-            };
+            var grpGrid = UiHelper.CreateGroupBox(
+                "Toàn Bộ Danh Mục Thuốc Trong Kho",
+                UiHelper.DarkText,
+                UiHelper.Pad(12, 8, 12, 12),
+                Padding.Empty);
 
             var gridContainer = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 2
+                RowCount = 2,
+                Margin = Padding.Empty
             };
             gridContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             gridContainer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -159,60 +161,42 @@ namespace ClinicManagement.Views
             // Dòng chú thích màu sắc cảnh báo
             var legendFlow = new FlowLayoutPanel
             {
-                Dock = DockStyle.Fill,
+                Dock = DockStyle.Top,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlowDirection = FlowDirection.RightToLeft,
-                Margin = new Padding(0, 0, 0, 6)
+                Margin = UiHelper.Pad(0, 0, 0, 6)
             };
 
             var lblLegendRed = new Label
             {
                 Text = "Màu Đỏ: Cận hạn dùng (<= 60 ngày)",
                 AutoSize = true,
+                UseMnemonic = false,
                 BackColor = Color.FromArgb(250, 219, 216),
                 ForeColor = Color.FromArgb(146, 43, 33),
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
-                Padding = new Padding(6, 3, 6, 3),
-                Margin = new Padding(6, 0, 0, 0)
+                Font = UiHelper.FontSmall,
+                Padding = UiHelper.Pad(6, 3, 6, 3),
+                Margin = UiHelper.Pad(6, 0, 0, 0)
             };
 
             var lblLegendOrange = new Label
             {
                 Text = "Màu Cam: Tồn kho <= Mức tối thiểu",
                 AutoSize = true,
+                UseMnemonic = false,
                 BackColor = Color.FromArgb(253, 235, 208),
                 ForeColor = Color.FromArgb(147, 81, 22),
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Regular),
-                Padding = new Padding(6, 3, 6, 3),
-                Margin = new Padding(0)
+                Font = UiHelper.FontSmall,
+                Padding = UiHelper.Pad(6, 3, 6, 3),
+                Margin = Padding.Empty
             };
 
             legendFlow.Controls.Add(lblLegendRed);
             legendFlow.Controls.Add(lblLegendOrange);
 
             // Khởi tạo DataGridView hiển thị danh mục thuốc
-            _dgvMedicines = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                AllowUserToResizeRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                MultiSelect = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                RowHeadersVisible = false,
-                EnableHeadersVisualStyles = false,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
-                RowTemplate = { Height = 32 }
-            };
-
-            _dgvMedicines.ColumnHeadersDefaultCellStyle.BackColor = UiHelper.PrimaryBlue;
-            _dgvMedicines.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            _dgvMedicines.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            _dgvMedicines.ColumnHeadersHeight = 36;
+            _dgvMedicines = UiHelper.CreateStandardGrid();
 
             _dgvMedicines.Columns.Add(new DataGridViewTextBoxColumn { Name = "Id", HeaderText = "ID", FillWeight = 45 });
             _dgvMedicines.Columns.Add(new DataGridViewTextBoxColumn { Name = "Code", HeaderText = "Mã Thuốc", FillWeight = 85 });
@@ -224,7 +208,12 @@ namespace ClinicManagement.Views
             _dgvMedicines.Columns.Add(new DataGridViewTextBoxColumn { Name = "ExpiryDate", HeaderText = "Hạn Dùng", FillWeight = 95 });
             _dgvMedicines.Columns.Add(new DataGridViewTextBoxColumn { Name = "StatusText", HeaderText = "Trạng Thái Kho", FillWeight = 135 });
 
+            _dgvMedicines.Columns["UnitPrice"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            _dgvMedicines.Columns["StockQuantity"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            _dgvMedicines.Columns["MinStockAlert"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            _dgvMedicines.Columns["ExpiryDate"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             _dgvMedicines.CellFormatting += DgvMedicines_CellFormatting;
+            _dgvMedicines.CellDoubleClick += BtnOpenEditor_Click;
 
             gridContainer.Controls.Add(legendFlow, 0, 0);
             gridContainer.Controls.Add(_dgvMedicines, 0, 1);
@@ -232,7 +221,10 @@ namespace ClinicManagement.Views
 
             mainLayout.Controls.Add(grpToolbar, 0, 0);
             mainLayout.Controls.Add(grpGrid, 0, 1);
-            this.Controls.Add(mainLayout);
+
+            rootLayout.Controls.Add(headerBanner, 0, 0);
+            rootLayout.Controls.Add(mainLayout, 0, 1);
+            this.Controls.Add(rootLayout);
         }
 
         // Tải toàn bộ danh sách thuốc từ CSDL và hiển thị lên lưới
