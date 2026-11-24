@@ -153,6 +153,6 @@ INSERT OR IGNORE INTO MedicalRecords (Id, PatientId, DoctorId, QueueId, Symptoms
 INSERT OR IGNORE INTO Prescriptions (Id, MedicalRecordId, TotalAmount, IsDispensed) VALUES
 (1, 1, 65000, 0); -- Đơn thuốc giá 65k, IsDispensed = 0 (chưa xuất)
 
-INSERT OR IGNORE INTO PrescriptionDetails (PrescriptionId, MedicineId, Quantity, Dosage, UnitPrice) VALUES
-(1, 1, 10, 'Sáng 1 viên, tối 1 viên sau ăn', 2000),   -- 10 viên Para = 20k
-(1, 2, 10, 'Sáng 1 viên, chiều 1 viên sau ăn', 4500); -- 10 viên Amox = 45k
+INSERT OR IGNORE INTO PrescriptionDetails (Id, PrescriptionId, MedicineId, Quantity, Dosage, UnitPrice) VALUES
+(1, 1, 1, 10, 'Sáng 1 viên, tối 1 viên sau ăn', 2000),   -- 10 viên Para = 20k
+(2, 1, 2, 10, 'Sáng 1 viên, chiều 1 viên sau ăn', 4500); -- 10 viên Amox = 45k
