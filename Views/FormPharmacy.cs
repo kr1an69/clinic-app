@@ -28,7 +28,9 @@ namespace ClinicManagement.Views
         private Label _lblExamFee = null!;
         private Label _lblMedicineFee = null!;
         private Label _lblTotalAmount = null!;
+        private IconButton _btnPrintInvoice = null!;
         private IconButton _btnConfirmCheckout = null!;
+        private int? _lastPaidInvoiceId;
 
         public FormPharmacy()
         {
@@ -266,7 +268,12 @@ namespace ClinicManagement.Views
 
             _btnConfirmCheckout = UiHelper.CreateButton("Xác nhận Thu phí & Xuất thuốc", IconChar.CashRegister, UiHelper.SuccessGreen, 250, 40);
             _btnConfirmCheckout.Click += BtnConfirmCheckout_Click;
+
+            _btnPrintInvoice = UiHelper.CreateButton("Xem trước & In Hóa đơn", IconChar.Print, UiHelper.PrimaryBlue, 225, 40);
+            _btnPrintInvoice.Click += BtnPrintInvoice_Click;
+
             actionBar.Controls.Add(_btnConfirmCheckout);
+            actionBar.Controls.Add(_btnPrintInvoice);
 
             rightLayout.Controls.Add(infoBox, 0, 0);
             rightLayout.Controls.Add(_dgvDetails, 0, 1);
@@ -428,19 +435,61 @@ namespace ClinicManagement.Views
                     _selectedPrescription.PrescriptionId,
                     AppSession.CurrentUser?.Id);
 
-                MessageBox.Show(
-                    $"Thanh toán và xuất thuốc thành công!\nMã hóa đơn: #{invoiceId}",
+                _lastPaidInvoiceId = invoiceId;
+                LoadPendingPrescriptions();
+
+                var printAsk = MessageBox.Show(
+                    $"Thanh toán và xuất thuốc thành công!\nMã hóa đơn: #{invoiceId}\n\nBạn có muốn xem trước & in hóa đơn vừa thanh toán không?",
                     "Thành công",
-                    MessageBoxButtons.OK,
+                    MessageBoxButtons.YesNo,
                     MessageBoxIcon.Information);
 
-                LoadPendingPrescriptions();
+                if (printAsk == DialogResult.Yes)
+                {
+                    using var frmPrint = new FormPrintInvoice(invoiceId);
+                    frmPrint.ShowDialog(this);
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Không thể hoàn tất thanh toán:\n{ex.Message}", "Lỗi xuất kho", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 RefreshSelectedDetails();
             }
+        }
+
+        // Mở màn hình xem trước & in đơn thuốc kèm hóa đơn (#12)
+        private void BtnPrintInvoice_Click(object? sender, EventArgs e)
+        {
+            if (_selectedPrescription != null)
+            {
+                RefreshSelectedDetails();
+                var previewData = new InvoicePrintData
+                {
+                    InvoiceId = 0,
+                    PrescriptionId = _selectedPrescription.PrescriptionId,
+                    PatientName = _selectedPrescription.PatientName,
+                    Phone = _selectedPrescription.Phone,
+                    CashierName = AppSession.CurrentUser?.FullName,
+                    Diagnosis = _selectedPrescription.Diagnosis,
+                    ExamFee = _selectedPrescription.ExamFee,
+                    PaidAt = DateTime.Now,
+                    Items = _currentDetails
+                };
+
+                using var frmPreview = new FormPrintInvoice(previewData);
+                frmPreview.ShowDialog(this);
+                return;
+            }
+
+            if (_lastPaidInvoiceId.HasValue)
+            {
+                using var frmPaid = new FormPrintInvoice(_lastPaidInvoiceId.Value);
+                frmPaid.ShowDialog(this);
+                return;
+            }
+
+            using var frmLatest = new FormPrintInvoice();
+            frmLatest.ShowDialog(this);
         }
     }
 }

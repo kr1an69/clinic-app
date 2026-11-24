@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Dapper;
 using ClinicManagement.Data;
@@ -165,7 +166,10 @@ namespace ClinicManagement.Controllers
             }
 
             using var conn = DbContext.GetConnection();
-            conn.Open();
+            if (conn.State != ConnectionState.Open)
+            {
+                conn.Open();
+            }
             using var transaction = conn.BeginTransaction();
 
             try
@@ -286,6 +290,69 @@ namespace ClinicManagement.Controllers
                 transaction.Rollback();
                 throw;
             }
+        }
+
+        // Lấy lịch sử các hóa đơn đã thanh toán (mới nhất lên đầu)
+        public List<InvoiceHistoryItem> GetInvoicesHistory(int limit = 100)
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT
+                    inv.Id AS InvoiceId,
+                    inv.MedicalRecordId,
+                    inv.PrescriptionId,
+                    pat.FullName AS PatientName,
+                    pat.Phone,
+                    mr.Diagnosis,
+                    doc.FullName AS DoctorName,
+                    cash.FullName AS CashierName,
+                    inv.ExamFee,
+                    inv.MedicineFee,
+                    inv.TotalAmount,
+                    inv.PaidAt
+                FROM Invoices inv
+                INNER JOIN MedicalRecords mr ON inv.MedicalRecordId = mr.Id
+                INNER JOIN Patients pat ON mr.PatientId = pat.Id
+                LEFT JOIN Users doc ON mr.DoctorId = doc.Id
+                LEFT JOIN Users cash ON inv.CashierId = cash.Id
+                ORDER BY inv.PaidAt DESC, inv.Id DESC
+                LIMIT @Limit;";
+            return conn.Query<InvoiceHistoryItem>(sql, new { Limit = limit }).ToList();
+        }
+
+        // Lấy thông tin chi tiết một hóa đơn theo Id để xem trước và in
+        public InvoiceHistoryItem? GetInvoiceById(int invoiceId)
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = @"
+                SELECT
+                    inv.Id AS InvoiceId,
+                    inv.MedicalRecordId,
+                    inv.PrescriptionId,
+                    pat.FullName AS PatientName,
+                    pat.Phone,
+                    mr.Diagnosis,
+                    doc.FullName AS DoctorName,
+                    cash.FullName AS CashierName,
+                    inv.ExamFee,
+                    inv.MedicineFee,
+                    inv.TotalAmount,
+                    inv.PaidAt
+                FROM Invoices inv
+                INNER JOIN MedicalRecords mr ON inv.MedicalRecordId = mr.Id
+                INNER JOIN Patients pat ON mr.PatientId = pat.Id
+                LEFT JOIN Users doc ON mr.DoctorId = doc.Id
+                LEFT JOIN Users cash ON inv.CashierId = cash.Id
+                WHERE inv.Id = @InvoiceId;";
+            return conn.QueryFirstOrDefault<InvoiceHistoryItem>(sql, new { InvoiceId = invoiceId });
+        }
+
+        // Tính tổng doanh thu đã thu từ toàn bộ hóa đơn
+        public double GetTotalRevenue()
+        {
+            using var conn = DbContext.GetConnection();
+            const string sql = "SELECT COALESCE(SUM(TotalAmount), 0) FROM Invoices;";
+            return conn.ExecuteScalar<double>(sql);
         }
 
         private class PrescriptionCheckoutInfo
