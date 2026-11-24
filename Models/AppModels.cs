@@ -133,4 +133,20 @@ namespace ClinicManagement.Models
         public int CompletedCount { get; set; }
         public int WaitingCount { get; set; }
     }
+
+    public class InvoiceHistoryItem
+    {
+        public int InvoiceId { get; set; }
+        public int MedicalRecordId { get; set; }
+        public int? PrescriptionId { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Diagnosis { get; set; }
+        public string? DoctorName { get; set; }
+        public string? CashierName { get; set; }
+        public double ExamFee { get; set; }
+        public double MedicineFee { get; set; }
+        public double TotalAmount { get; set; }
+        public DateTime PaidAt { get; set; }
+    }
 }
