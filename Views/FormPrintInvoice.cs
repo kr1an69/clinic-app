@@ -436,7 +436,7 @@ namespace ClinicManagement.Views
             if (_currentPageNumber == 1)
             {
                 // 1. Header phòng khám
-                g.DrawString("PHÒNG KHÁM ĐA KHOA TÂM AN", fontClinic, brushPrimary, left, y);
+                g.DrawString("PHÒNG KHÁM ĐA KHOA", fontClinic, brushPrimary, left, y);
                 g.DrawString(ticketCode, fontBold, brushDark, right, y, fmtRight);
                 y += 20;
 
@@ -471,7 +471,7 @@ namespace ClinicManagement.Views
             else
             {
                 // Tiêu đề rút gọn cho trang tiếp theo
-                g.DrawString("PHÒNG KHÁM ĐA KHOA TÂM AN - ĐƠN THUỐC & HÓA ĐƠN (TIẾP THEO)", fontSection, brushPrimary, left, y);
+                g.DrawString("PHÒNG KHÁM ĐA KHOA - ĐƠN THUỐC & HÓA ĐƠN (TIẾP THEO)", fontSection, brushPrimary, left, y);
                 g.DrawString(ticketCode, fontBold, brushDark, right, y, fmtRight);
                 y += 20;
 
