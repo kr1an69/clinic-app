@@ -47,24 +47,30 @@ namespace ClinicManagement.Views
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             // Thanh lọc thời gian
-            var grpFilter = UiHelper.CreateGroupBox("Thời Gian Thống Kê Tiếp Nhận",
-                padding: UiHelper.Pad(10),
+            var grpFilter = UiHelper.CreateGroupBox(
+                title: "Thời Gian Thống Kê Tiếp Nhận",
+                padding: UiHelper.Pad(12, 8, 12, 10),
                 margin: UiHelper.Pad(0, 0, 0, 10));
+            grpFilter.AutoSize = true;
+            grpFilter.AutoSizeMode = AutoSizeMode.GrowAndShrink;
 
             var filterLayout = new TableLayoutPanel
             {
-                Dock = DockStyle.Fill,
+                Dock = DockStyle.Top,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 ColumnCount = 2,
                 RowCount = 1
             };
             filterLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             filterLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            filterLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             var leftFilterFlow = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false
             };
@@ -87,7 +93,7 @@ namespace ClinicManagement.Views
                 Margin = UiHelper.Pad(0, 4, 12, 0)
             };
 
-            var btnFilter = UiHelper.CreateButton("Lọc thống kê", IconChar.Filter, UiHelper.PrimaryBlue, minWidth: 110);
+            var btnFilter = UiHelper.CreateButton("Lọc thống kê", IconChar.Filter, UiHelper.PrimaryBlue, minWidth: 115, height: 34);
             btnFilter.Click += (s, e) => LoadReportData();
 
             leftFilterFlow.Controls.Add(UiHelper.CreateLabel("Từ ngày:", font: UiHelper.FontRegular, margin: UiHelper.Pad(0, 6, 6, 0)));
@@ -100,11 +106,12 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlowDirection = FlowDirection.RightToLeft,
                 WrapContents = false
             };
 
-            var btnRefresh = UiHelper.CreateButton("Làm mới dữ liệu", IconChar.ArrowsRotate, UiHelper.SuccessGreen, minWidth: 140);
+            var btnRefresh = UiHelper.CreateButton("Làm mới dữ liệu", IconChar.ArrowsRotate, UiHelper.SuccessGreen, minWidth: 145, height: 34);
             btnRefresh.Click += (s, e) =>
             {
                 _dtpFrom.Value = DateTime.Today.AddDays(-30);
@@ -123,7 +130,7 @@ namespace ClinicManagement.Views
                 Dock = DockStyle.Top,
                 ColumnCount = 4,
                 RowCount = 1,
-                Height = UiHelper.S(86),
+                Height = UiHelper.S(96),
                 Margin = UiHelper.Pad(0, 0, 0, 10),
                 BackColor = Color.Transparent
             };
@@ -131,6 +138,7 @@ namespace ClinicManagement.Views
             kpiTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
             kpiTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
             kpiTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            kpiTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             kpiTable.Controls.Add(CreateKpiCard("TỔNG LƯỢT ĐĂNG KÝ", IconChar.Users, UiHelper.PrimaryBlue, out _lblKpiTotal), 0, 0);
             kpiTable.Controls.Add(CreateKpiCard("ĐÃ KHÁM HOÀN TẤT", IconChar.CircleCheck, UiHelper.SuccessGreen, out _lblKpiCompleted), 1, 0);
