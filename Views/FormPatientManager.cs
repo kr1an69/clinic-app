@@ -52,12 +52,15 @@ namespace ClinicManagement.Views
             var grpSearch = UiHelper.CreateGroupBox(
                 title: "Tìm kiếm & Tra cứu hồ sơ bệnh nhân",
                 margin: UiHelper.Pad(0, 0, 0, 10),
-                padding: UiHelper.Pad(10));
+                padding: UiHelper.Pad(12, 8, 12, 10));
+            grpSearch.AutoSize = true;
+            grpSearch.AutoSizeMode = AutoSizeMode.GrowAndShrink;
 
             var searchLayout = new TableLayoutPanel
             {
-                Dock = DockStyle.Fill,
+                Dock = DockStyle.Top,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 ColumnCount = 2,
                 RowCount = 1
             };
@@ -69,6 +72,7 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false
             };
@@ -79,7 +83,7 @@ namespace ClinicManagement.Views
                 PlaceholderText = "Gõ họ tên hoặc số điện thoại...",
                 Font = UiHelper.FontRegular,
                 Anchor = AnchorStyles.Left,
-                Margin = UiHelper.Pad(0, 5, 8, 0)
+                Margin = UiHelper.Pad(0, 4, 8, 0)
             };
             _txtSearch.KeyDown += (s, e) =>
             {
@@ -95,7 +99,8 @@ namespace ClinicManagement.Views
                 text: "Tìm kiếm",
                 IconChar.MagnifyingGlass,
                 backColor: UiHelper.PrimaryBlue,
-                minWidth: 105
+                minWidth: 105,
+                height: 34
             );
             btnSearch.Click += (s, e) => SearchPatients();
 
@@ -103,7 +108,8 @@ namespace ClinicManagement.Views
                 text: "Hiện tất cả",
                 IconChar.Rotate,
                 backColor: UiHelper.SecondaryGray,
-                minWidth: 105
+                minWidth: 105,
+                height: 34
             );
             btnShowAll.Click += (s, e) =>
             {
@@ -114,7 +120,7 @@ namespace ClinicManagement.Views
             leftSearchFlow.Controls.Add(UiHelper.CreateLabel(
                 "Tìm kiếm (Họ tên / SĐT):",
                 font: UiHelper.FontBold,
-                margin: UiHelper.Pad(0, 7, 8, 0)));
+                margin: UiHelper.Pad(0, 6, 8, 0)));
             leftSearchFlow.Controls.Add(_txtSearch);
             leftSearchFlow.Controls.Add(btnSearch);
             leftSearchFlow.Controls.Add(btnShowAll);
@@ -123,6 +129,7 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlowDirection = FlowDirection.RightToLeft,
                 WrapContents = false
             };
@@ -131,9 +138,22 @@ namespace ClinicManagement.Views
                 "Cấp STT Khám Cho BN Đang Chọn",
                 IconChar.Ticket,
                 backColor: UiHelper.SuccessGreen,
-                minWidth: 255);
+                minWidth: 255,
+                height: 34
+            );
             btnSelect.Click += (s, e) => SelectAndClose();
+
+            var btnHistory = UiHelper.CreateButton(
+                "Lịch Sử Khám",
+                IconChar.ClockRotateLeft,
+                backColor: UiHelper.PrimaryBlue,
+                minWidth: 135,
+                height: 34
+            );
+            btnHistory.Click += (s, e) => ShowPatientVisitHistory();
+            
             rightActionFlow.Controls.Add(btnSelect);
+            rightActionFlow.Controls.Add(btnHistory);
 
             searchLayout.Controls.Add(leftSearchFlow, 0, 0);
             searchLayout.Controls.Add(rightActionFlow, 1, 0);
@@ -567,6 +587,75 @@ namespace ClinicManagement.Views
 
             this.DialogResult = DialogResult.OK;
             this.Close();
+        }
+
+        private void ShowPatientVisitHistory()
+        {
+            if (SelectedPatient == null && _dgvPatients.SelectedRows.Count > 0)
+            {
+                DgvPatients_SelectionChanged(null, EventArgs.Empty);
+            }
+            if (SelectedPatient == null)
+            {
+                MessageBox.Show("Vui lòng chọn 1 bệnh nhân để xem lịch sử khám!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+            var history = _controller.GetPatientVisitHistory(SelectedPatient.Id);
+            if (history == null || history.Count == 0)
+            {
+                MessageBox.Show($"Bệnh nhân [{SelectedPatient.FullName}] chưa có lượt khám nào trong quá khứ.", "Lịch sử khám", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            
+            using var dlg = new Form
+            {
+                Text = $"Lịch Sử Khám Bệnh - BN: {SelectedPatient.FullName} (Mã: {SelectedPatient.Id})",
+                Size = new Size(680, 420),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                Padding = UiHelper.Pad(12)
+            };
+            
+            var dgv = UiHelper.CreateStandardGrid(baseRowHeight: 34, baseHeaderHeight: 36);
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "QueueNumber", HeaderText = "STT Khám", FillWeight = 35 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "QueueDate", HeaderText = "Ngày Khám", FillWeight = 50 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "QueueTime", HeaderText = "Giờ Đến", FillWeight = 45 });
+            dgv.Columns.Add(new DataGridViewTextBoxColumn { Name = "Status", HeaderText = "Trạng Thái", FillWeight = 60 });
+            
+            dgv.Columns["QueueNumber"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dgv.Columns["QueueDate"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dgv.Columns["QueueTime"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dgv.Columns["Status"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            
+            foreach (var item in history)
+            {
+                string dateStr = DateTime.TryParse(item.QueueDate.ToString(), out DateTime parsedDate)
+                    ? parsedDate.ToString("dd/MM/yyyy")
+                    : item.QueueDate.ToString();
+                
+                string timeStr = item.CreatedAt.ToString("HH:mm");
+                
+                string statusText = item.Status switch
+                {
+                    "Completed" => "Đã hoàn tất",
+                    "Examining" => "Đang khám",
+                    "Waiting" => "Đang chờ",
+                    "PendingPayment" => "Chờ thanh toán",
+                    "Cancelled" => "Đã hủy",
+                    _ => item.Status
+                };
+                dgv.Rows.Add(
+                    $"{item.QueueNumber:D2}", 
+                    dateStr,                  
+                    timeStr,                  
+                    statusText                
+                );
+            }            
+            
+            dlg.Controls.Add(dgv);
+            dlg.ShowDialog(this);
         }
     }
 }  
