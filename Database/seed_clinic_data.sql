@@ -142,9 +142,9 @@ INSERT OR IGNORE INTO Medicines (Id, Code, Name, Unit, UnitPrice, StockQuantity,
 
 -- 2.4 Hàng đợi mẫu hôm nay (Để TV1 test TV Monitor, TV2 test Bác sĩ gọi khám)
 INSERT OR IGNORE INTO Queues (Id, PatientId, QueueNumber, QueueDate, Status) VALUES
-(1, 1, 1, date('now'), 'Examining'),      -- Đang khám (STT 1)
-(2, 2, 2, date('now'), 'Waiting'),        -- Đang chờ (STT 2)
-(3, 3, 3, date('now'), 'Waiting');        -- Đang chờ (STT 3)
+(1, 1, 1, date('now', 'localtime'), 'Examining'),      -- Đang khám (STT 1)
+(2, 2, 2, date('now', 'localtime'), 'Waiting'),        -- Đang chờ (STT 2)
+(3, 3, 3, date('now', 'localtime'), 'Waiting');        -- Đang chờ (STT 3)
 
 -- 2.5 Bệnh án & Đơn thuốc mẫu đã kê (Để TV3 test Thu ngân & Xuất kho trừ tồn)
 INSERT OR IGNORE INTO MedicalRecords (Id, PatientId, DoctorId, QueueId, Symptoms, Diagnosis, ExamFee) VALUES
@@ -153,6 +153,6 @@ INSERT OR IGNORE INTO MedicalRecords (Id, PatientId, DoctorId, QueueId, Symptoms
 INSERT OR IGNORE INTO Prescriptions (Id, MedicalRecordId, TotalAmount, IsDispensed) VALUES
 (1, 1, 65000, 0); -- Đơn thuốc giá 65k, IsDispensed = 0 (chưa xuất)
 
-INSERT OR IGNORE INTO PrescriptionDetails (PrescriptionId, MedicineId, Quantity, Dosage, UnitPrice) VALUES
-(1, 1, 10, 'Sáng 1 viên, tối 1 viên sau ăn', 2000),   -- 10 viên Para = 20k
-(1, 2, 10, 'Sáng 1 viên, chiều 1 viên sau ăn', 4500); -- 10 viên Amox = 45k
+INSERT OR IGNORE INTO PrescriptionDetails (Id, PrescriptionId, MedicineId, Quantity, Dosage, UnitPrice) VALUES
+(1, 1, 1, 10, 'Sáng 1 viên, tối 1 viên sau ăn', 2000),   -- 10 viên Para = 20k
+(2, 1, 2, 10, 'Sáng 1 viên, chiều 1 viên sau ăn', 4500); -- 10 viên Amox = 45k

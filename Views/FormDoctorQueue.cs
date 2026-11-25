@@ -9,9 +9,10 @@ using FontAwesome.Sharp;
 namespace ClinicManagement.Views
 {
     /// <summary>
-    /// SCREEN #06: DANH SÁCH CHỜ KHÁM & ĐIỀU PHỐI GỌI BỆNH NHÂN (Thành viên 2 - Đức)
+    /// DANH SÁCH CHỜ KHÁM & ĐIỀU PHỐI GỌI BỆNH NHÂN
+    /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
     /// </summary>
-    public class FormDoctorQueue : Form
+    public class FormDoctorQueue : BaseForm
     {
         private readonly DoctorController _controller = new();
         private readonly Action<QueueItem>? _onOpenExamScreen;
@@ -53,12 +54,13 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Hàng Đợi Khám Bệnh - Bác Sĩ";
-            this.AutoScaleMode = AutoScaleMode.Dpi;
-            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
-            this.BackColor = Color.FromArgb(245, 247, 250);
-            this.Dock = DockStyle.Fill;
+            this.ConfigureAsFixedDialog(baseWidth: 1150, baseHeight: 680);
 
-            var bannerPanel = BuildHeaderBanner();
+            var bannerPanel = UiHelper.CreateHeaderBanner(
+                title: "DANH SÁCH CHỜ KHÁM & ĐIỀU PHỐI GỌI BỆNH NHÂN (BS)",
+                subtitle: "Bác sĩ chọn số thứ tự -> Bấm 'Gọi Vào Khám' để chuyển trạng thái sang Examining"
+            );
+
             _mainLayout = BuildMainLayout();
             _grpWaitingList = BuildWaitingListGroup();
             _grpCallAction = BuildCallActionGroup();
@@ -70,47 +72,6 @@ namespace ClinicManagement.Views
             this.Controls.Add(bannerPanel);
         }
 
-        private Panel BuildHeaderBanner()
-        {
-            var banner = new Panel
-            {
-                Dock = DockStyle.Top,
-                Height = 65,
-                BackColor = Color.FromArgb(234, 242, 248),
-                Padding = new Padding(16, 8, 16, 8)
-            };
-
-            var lblTitle = new Label
-            {
-                Text = "SCREEN #06: DANH SÁCH CHỜ KHÁM & ĐIỀU PHỐI GỌI BỆNH NHÂN (BS)",
-                Font = new Font("Segoe UI", 11.5F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                Dock = DockStyle.Top,
-                AutoSize = true
-            };
-
-            var lblSubtitle = new Label
-            {
-                Text = "Bác sĩ chọn số thứ tự -> Bấm 'Gọi Vào Khám' để chuyển trạng thái sang Examining và mở Screen #07",
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
-                ForeColor = UiHelper.SecondaryGray,
-                Dock = DockStyle.Bottom,
-                AutoSize = true
-            };
-
-            var borderBottom = new Panel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 1,
-                BackColor = Color.FromArgb(169, 204, 227)
-            };
-
-            banner.Controls.Add(lblSubtitle);
-            banner.Controls.Add(lblTitle);
-            banner.Controls.Add(borderBottom);
-            return banner;
-        }
-
         private TableLayoutPanel BuildMainLayout()
         {
             var layout = new TableLayoutPanel
@@ -119,7 +80,7 @@ namespace ClinicManagement.Views
                 ColumnCount = 2,
                 RowCount = 1,
                 BackColor = Color.Transparent,
-                Padding = new Padding(12)
+                Padding = UiHelper.Pad(12)
             };
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
@@ -129,14 +90,7 @@ namespace ClinicManagement.Views
 
         private GroupBox BuildWaitingListGroup()
         {
-            var group = new GroupBox
-            {
-                Text = " DANH SÁCH BỆNH NHÂN ĐANG CHỜ KHÁM HÔM NAY ",
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = UiHelper.PrimaryBlue,
-                Padding = new Padding(10)
-            };
+            var group = UiHelper.CreateGroupBox("DANH SÁCH BỆNH NHÂN ĐANG CHỜ KHÁM HÔM NAY", padding: UiHelper.Pad(10));
 
             var layout = new TableLayoutPanel
             {
@@ -145,44 +99,22 @@ namespace ClinicManagement.Views
                 ColumnCount = 1,
                 BackColor = Color.Transparent
             };
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             var topPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlowDirection = FlowDirection.RightToLeft,
-                Padding = new Padding(0, 2, 0, 4)
+                Padding = UiHelper.Pad(0, 2, 0, 6)
             };
 
-            _btnRefresh = UiHelper.CreateButton(" Làm mới", IconChar.Rotate, Color.FromArgb(52, 73, 94), minWidth: 110, height: 34);
+            _btnRefresh = UiHelper.CreateButton("Làm mới", IconChar.Rotate, Color.FromArgb(52, 73, 94), minWidth: 110, height: 34);
             topPanel.Controls.Add(_btnRefresh);
 
-            _dgvDoctorWaiting = new DataGridView
-            {
-                Dock = DockStyle.Fill,
-                ReadOnly = true,
-                AllowUserToAddRows = false,
-                AllowUserToDeleteRows = false,
-                MultiSelect = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.Fixed3D,
-                RowHeadersVisible = false,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular),
-                ForeColor = UiHelper.DarkText
-            };
-
-            _dgvDoctorWaiting.EnableHeadersVisualStyles = false;
-            _dgvDoctorWaiting.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(223, 230, 233);
-            _dgvDoctorWaiting.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(45, 52, 54);
-            _dgvDoctorWaiting.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
-            _dgvDoctorWaiting.ColumnHeadersHeight = 38;
-            _dgvDoctorWaiting.RowTemplate.Height = 36;
-            _dgvDoctorWaiting.DefaultCellStyle.SelectionBackColor = Color.FromArgb(174, 214, 241);
-            _dgvDoctorWaiting.DefaultCellStyle.SelectionForeColor = Color.FromArgb(27, 79, 114);
-
+            _dgvDoctorWaiting = UiHelper.CreateStandardGrid(baseRowHeight: 36, baseHeaderHeight: 38);
             _dgvDoctorWaiting.Columns.Add(new DataGridViewTextBoxColumn { Name = "QueueNumber", HeaderText = "STT", FillWeight = 18 });
             _dgvDoctorWaiting.Columns.Add(new DataGridViewTextBoxColumn { Name = "PatientName", HeaderText = "Họ và Tên Bệnh Nhân", FillWeight = 42 });
             _dgvDoctorWaiting.Columns.Add(new DataGridViewTextBoxColumn { Name = "Phone", HeaderText = "Số Điện Thoại", FillWeight = 25 });
@@ -196,14 +128,7 @@ namespace ClinicManagement.Views
 
         private GroupBox BuildCallActionGroup()
         {
-            var group = new GroupBox
-            {
-                Text = " ĐIỀU PHỐI GỌI KHÁM ",
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = UiHelper.PrimaryBlue,
-                Padding = new Padding(12)
-            };
+            var group = UiHelper.CreateGroupBox("ĐIỀU PHỐI GỌI KHÁM", padding: UiHelper.Pad(12));
 
             var layout = new TableLayoutPanel
             {
@@ -212,106 +137,95 @@ namespace ClinicManagement.Views
                 ColumnCount = 1,
                 BackColor = Color.Transparent
             };
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 160F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 52F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 46F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 46F));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(165)));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(52)));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(48)));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(48)));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
+            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             _patientCard = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.FromArgb(235, 245, 251),
                 BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(10),
-                Margin = new Padding(0, 0, 0, 10)
+                Padding = UiHelper.Pad(10),
+                Margin = UiHelper.Pad(0, 0, 0, 10)
             };
 
-            var lblCardHeader = new Label
-            {
-                Text = "BỆNH NHÂN ĐANG CHỌN",
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
-                ForeColor = Color.FromArgb(40, 116, 166),
-                Dock = DockStyle.Top,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Height = 20
-            };
+            var lblCardHeader = UiHelper.CreateLabel(
+                text: "BỆNH NHÂN ĐANG CHỌN",
+                font: UiHelper.FontLabelBold,
+                foreColor: Color.FromArgb(40, 116, 166),
+                margin: UiHelper.Pad(0, 0, 0, 4));
+            lblCardHeader.Dock = DockStyle.Top;
+            lblCardHeader.TextAlign = ContentAlignment.MiddleCenter;
 
-            _lblQueueNumberBig = new Label
-            {
-                Text = "STT: --",
-                Font = new Font("Segoe UI", 26F, FontStyle.Bold),
-                ForeColor = UiHelper.PrimaryBlue,
-                Dock = DockStyle.Top,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Height = 52
-            };
+            _lblQueueNumberBig = UiHelper.CreateLabel(
+                text: "STT: --",
+                font: new Font("Segoe UI", 26F, FontStyle.Bold),
+                foreColor: UiHelper.PrimaryBlue,
+                margin: UiHelper.Pad(0, 0, 0, 2));
+            _lblQueueNumberBig.Dock = DockStyle.Top;
+            _lblQueueNumberBig.TextAlign = ContentAlignment.MiddleCenter;
+            _lblQueueNumberBig.Height = UiHelper.S(52);
 
-            _lblPatientName = new Label
-            {
-                Text = "Chưa chọn bệnh nhân",
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                Dock = DockStyle.Top,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Height = 28
-            };
+            _lblPatientName = UiHelper.CreateLabel(
+                text: "Chưa chọn bệnh nhân",
+                font: new Font("Segoe UI", 12F, FontStyle.Bold),
+                foreColor: UiHelper.DarkText,
+                margin: UiHelper.Pad(0, 0, 0, 2));
+            _lblPatientName.Dock = DockStyle.Top;
+            _lblPatientName.TextAlign = ContentAlignment.MiddleCenter;
 
-            _lblPatientMeta = new Label
-            {
-                Text = "Chọn một bệnh nhân trong danh sách bên trái",
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
-                ForeColor = UiHelper.SecondaryGray,
-                Dock = DockStyle.Top,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Height = 22
-            };
+            _lblPatientMeta = UiHelper.CreateLabel(
+                text: "Chọn một bệnh nhân trong danh sách bên trái",
+                font: UiHelper.FontSmall,
+                foreColor: UiHelper.SecondaryGray,
+                margin: Padding.Empty);
+            _lblPatientMeta.Dock = DockStyle.Top;
+            _lblPatientMeta.TextAlign = ContentAlignment.MiddleCenter;
 
             _patientCard.Controls.Add(_lblPatientMeta);
             _patientCard.Controls.Add(_lblPatientName);
             _patientCard.Controls.Add(_lblQueueNumberBig);
             _patientCard.Controls.Add(lblCardHeader);
 
-            _btnCallPatient = UiHelper.CreateButton("  GỌI VÀO KHÁM & MỞ PHIẾU KHÁM (#07)", IconChar.Stethoscope, UiHelper.SuccessGreen, height: 44);
+            _btnCallPatient = UiHelper.CreateButton("GỌI VÀO KHÁM & MỞ PHIẾU KHÁM", IconChar.Stethoscope, UiHelper.SuccessGreen, height: 44);
+            _btnCallPatient.AutoSize = false;
             _btnCallPatient.Dock = DockStyle.Fill;
-            _btnCallPatient.TextAlign = ContentAlignment.MiddleLeft;
-            _btnCallPatient.Padding = new Padding(12, 0, 0, 0);
-            _btnCallPatient.Margin = new Padding(0, 0, 0, 8);
+            _btnCallPatient.Margin = UiHelper.Pad(0, 0, 0, 8);
 
-            _btnViewHistory = UiHelper.CreateButton("  Xem tiền sử khám bệnh của BN này (#08)", IconChar.ClockRotateLeft, UiHelper.PrimaryBlue, height: 40);
+            _btnViewHistory = UiHelper.CreateButton("Xem tiền sử khám bệnh của BN này", IconChar.ClockRotateLeft, UiHelper.PrimaryBlue, height: 40);
+            _btnViewHistory.AutoSize = false;
             _btnViewHistory.Dock = DockStyle.Fill;
-            _btnViewHistory.TextAlign = ContentAlignment.MiddleLeft;
-            _btnViewHistory.Padding = new Padding(12, 0, 0, 0);
-            _btnViewHistory.Margin = new Padding(0, 0, 0, 8);
+            _btnViewHistory.Margin = UiHelper.Pad(0, 0, 0, 8);
 
-            _btnCancelQueue = UiHelper.CreateButton("  Đánh dấu Vắng mặt / Hủy lượt (Cancelled)", IconChar.UserSlash, UiHelper.DangerRed, height: 40);
+            _btnCancelQueue = UiHelper.CreateButton("Đánh dấu Vắng mặt / Hủy lượt (Cancelled)", IconChar.UserSlash, UiHelper.DangerRed, height: 40);
+            _btnCancelQueue.AutoSize = false;
             _btnCancelQueue.Dock = DockStyle.Fill;
-            _btnCancelQueue.TextAlign = ContentAlignment.MiddleLeft;
-            _btnCancelQueue.Padding = new Padding(12, 0, 0, 0);
-            _btnCancelQueue.Margin = new Padding(0, 0, 0, 8);
+            _btnCancelQueue.Margin = UiHelper.Pad(0, 0, 0, 8);
 
-            var lblTip = new Label
-            {
-                Text = "💡 Mẹo: Bấm 'Gọi Vào Khám' sẽ phát tín hiệu âm thanh và chuyển trạng thái đồng bộ sang TV phòng chờ.",
-                Font = new Font("Segoe UI", 8.5F, FontStyle.Italic),
-                ForeColor = UiHelper.SecondaryGray,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleLeft
-            };
+            var lblTip = UiHelper.CreateLabel(
+                text: "Mẹo: Bấm 'Gọi Vào Khám' sẽ phát tín hiệu âm thanh và chuyển trạng thái đồng bộ sang TV phòng chờ.",
+                font: new Font("Segoe UI", 8.5F, FontStyle.Italic),
+                foreColor: UiHelper.SecondaryGray,
+                margin: UiHelper.Pad(0, 4, 0, 4));
+            lblTip.Dock = DockStyle.Fill;
+            lblTip.TextAlign = ContentAlignment.MiddleLeft;
 
             layout.Controls.Add(_patientCard, 0, 0);
             layout.Controls.Add(_btnCallPatient, 0, 1);
             layout.Controls.Add(_btnViewHistory, 0, 2);
             layout.Controls.Add(_btnCancelQueue, 0, 3);
-            layout.Controls.Add(new Panel(), 0, 4);
+            layout.Controls.Add(new Panel { BackColor = Color.Transparent }, 0, 4);
             layout.Controls.Add(lblTip, 0, 5);
 
             group.Controls.Add(layout);
             return group;
         }
 
-        // --- CÁC PHƯƠNG THỨC NGHIỆP VỤ & SỰ KIỆN (GIAI ĐOẠN 2 & 3) ---
+        // --- CÁC PHƯƠNG THỨC NGHIỆP VỤ & SỰ KIỆN ---
 
         private void RegisterEvents()
         {
@@ -331,13 +245,19 @@ namespace ClinicManagement.Views
                     {
                         e.Value = "Đang khám";
                         e.CellStyle.ForeColor = UiHelper.PrimaryBlue;
-                        e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                        e.CellStyle.Font = UiHelper.FontBold;
                     }
                     else if (status == "Waiting")
                     {
                         e.Value = "Đang chờ";
                         e.CellStyle.ForeColor = UiHelper.WarningOrange;
-                        e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                        e.CellStyle.Font = UiHelper.FontBold;
+                    }
+                    else if (status == "Cancelled")
+                    {
+                        e.Value = "Vắng mặt / Đã hủy";
+                        e.CellStyle.ForeColor = UiHelper.DangerRed;
+                        e.CellStyle.Font = UiHelper.FontBold;
                     }
                 }
             };
@@ -432,7 +352,16 @@ namespace ClinicManagement.Views
                     _selectedQueueItem = item;
                     _lblQueueNumberBig.Text = $"STT: {item.QueueNumber:D2}";
                     _lblPatientName.Text = item.PatientName ?? "Chưa rõ tên";
-                    _lblPatientMeta.Text = $"Mã BN: #{item.PatientId} | SĐT: {item.Phone ?? "---"} | Trạng thái: {item.Status}";
+
+                    string statusVi = item.Status switch
+                    {
+                        "Examining" => "Đang khám",
+                        "Waiting" => "Đang chờ khám",
+                        "Cancelled" => "Vắng mặt / Đã hủy",
+                        _ => item.Status
+                    };
+
+                    _lblPatientMeta.Text = $"Mã BN: #{item.PatientId} | SĐT: {item.Phone ?? "---"} | Trạng thái: {statusVi}";
                     return;
                 }
             }
@@ -483,11 +412,8 @@ namespace ClinicManagement.Views
             }
             else
             {
-                MessageBox.Show(
-                    $"Xem lịch sử bệnh án cũ của bệnh nhân: {_selectedQueueItem.PatientName} (Mã BN #{_selectedQueueItem.PatientId}).\n(Tính năng liên kết mở Screen #08 FormMedicalHistory)",
-                    "Tiền Sử Bệnh Án",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Information);
+                using var frmHistory = new FormMedicalHistory(_selectedQueueItem.PatientName ?? string.Empty);
+                frmHistory.ShowDialog(this);
             }
         }
 

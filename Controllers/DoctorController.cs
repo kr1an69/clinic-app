@@ -10,10 +10,12 @@ namespace ClinicManagement.Controllers
     //BÁC SĨ KHÁM BỆNH & KÊ ĐƠN THUỐC
     public class DoctorController
     {
-        // Lấy danh sách bệnh nhân đang chờ khám (Status = 'Waiting') theo số thứ tự
+        // Lấy danh sách bệnh nhân trong hàng đợi hôm nay của bác sĩ (Waiting, Examining, Cancelled) theo số thứ tự
         public List<QueueItem> GetPatientsWaitingForDoctor()
         {
-            using var conn = DbContext.GetConnection();
+            using var conn = DbContext.GetConnection(); 
+            var today = DateTime.Now.ToString("yyyy-MM-dd");
+
             const string sql = @"
                 SELECT 
                     q.Id,
@@ -26,21 +28,47 @@ namespace ClinicManagement.Controllers
                     p.Phone
                 FROM Queues q
                 INNER JOIN Patients p ON q.PatientId = p.Id
-                WHERE q.QueueDate = date('now')
-                  AND q.Status IN ('Waiting', 'Examining')
-                ORDER BY q.QueueNumber ASC;";
-            return conn.Query<QueueItem>(sql).ToList();
+                WHERE (q.QueueDate = date('now') OR q.QueueDate = date('now', 'localtime') OR q.QueueDate = @Today)
+                  AND q.Status IN ('Waiting', 'Examining', 'Cancelled')
+                ORDER BY 
+                    CASE WHEN q.Status = 'Cancelled' THEN 1 ELSE 0 END ASC,
+                    q.QueueDate DESC, 
+                    q.QueueNumber ASC;";
+            return conn.Query<QueueItem>(sql, new { Today = today }).ToList();
         }
 
-        //Cập nhật trạng thái hàng đợi sang 'Examining' khi bác sĩ gọi khám
+        // Cập nhật trạng thái hàng đợi: chuyển bệnh nhân đang khám cũ trong ngày về 'Waiting', chỉ duy nhất bệnh nhân mới được gọi chuyển sang 'Examining'
         public void CallPatient(int queueId)
         {
             using var conn = DbContext.GetConnection();
-            const string sql = @"
-                UPDATE Queues
-                SET Status = 'Examining'
-               WHERE Id = @QueueId;";
-            conn.Execute(sql, new { QueueID = queueId });
+            using var trans = conn.BeginTransaction();
+            try
+            {
+                var today = DateTime.Now.ToString("yyyy-MM-dd");
+
+                // 1. Chuyển tất cả lượt đang Examining trong ngày hiện tại trở về Waiting (tránh 2 bệnh nhân khám cùng lúc)
+                const string resetOtherExaminingSql = @"
+                    UPDATE Queues
+                    SET Status = 'Waiting'
+                    WHERE Status = 'Examining' 
+                      AND Id <> @QueueId
+                      AND (QueueDate = date('now') OR QueueDate = date('now', 'localtime') OR QueueDate = @Today);";
+                conn.Execute(resetOtherExaminingSql, new { QueueId = queueId, Today = today }, trans);
+
+                // 2. Chuyển duy nhất lượt được gọi sang Examining
+                const string setExaminingSql = @"
+                    UPDATE Queues
+                    SET Status = 'Examining'
+                    WHERE Id = @QueueId;";
+                conn.Execute(setExaminingSql, new { QueueId = queueId }, trans);
+
+                trans.Commit();
+            }
+            catch
+            {
+                trans.Rollback();
+                throw;
+            }
         }
 
         //Lấy danh sách thuốc còn tồn kho (StockQuantity > 0) để gợi ý AutoComplete
@@ -89,19 +117,24 @@ namespace ClinicManagement.Controllers
                     record.Diagnosis,
                     ExamFee = record.ExamFee > 0 ? record.ExamFee : 50000
                 }, transaction);
-                //Nếu có kê đơn thuốc thì lưu bảng Prescriptions và PrescriptionDetails
+                // Luôn tạo bản ghi Prescriptions (kể cả khi không kê thuốc, TotalAmount = 0 để Thu ngân thu tiền công khám và hoàn tất ca khám)
+                double totalMedicineAmount = (details != null && details.Count > 0)
+                    ? details.Sum(d => d.Quantity * d.UnitPrice)
+                    : 0;
+
+                const string insertPrescriptionSql = @"
+                    INSERT INTO Prescriptions (MedicalRecordId, TotalAmount, IsDispensed)
+                    VALUES (@MedicalRecordId, @TotalAmount, 0);
+                    SELECT last_insert_rowid();";
+                int prescriptionId = conn.ExecuteScalar<int>(insertPrescriptionSql, new
+                {
+                    MedicalRecordId = medicalRecordId,
+                    TotalAmount = totalMedicineAmount
+                }, transaction);
+
+                // Nếu có thuốc được kê thì lưu chi tiết các loại thuốc vào bảng PrescriptionDetails
                 if (details != null && details.Count > 0)
                 {
-                    double totalMedicineAmount = details.Sum(d => d.Quantity * d.UnitPrice);
-                    const string insertPrescriptionSql = @"
-                        INSERT INTO Prescriptions (MedicalRecordId, TotalAmount, IsDispensed)
-                        VALUES (@MedicalRecordId, @TotalAmount, 0);
-                        SELECT last_insert_rowid();";
-                    int prescriptionId = conn.ExecuteScalar<int>(insertPrescriptionSql, new
-                    {
-                        MedicalRecordId = medicalRecordId,
-                        TotalAmount = totalMedicineAmount
-                    }, transaction);
                     const string insertDetailSql = @"
                         INSERT INTO PrescriptionDetails (PrescriptionId, MedicineId, Quantity, Dosage, UnitPrice)
                         VALUES (@PrescriptionId, @MedicineId, @Quantity, @Dosage, @UnitPrice);";
@@ -179,7 +212,7 @@ namespace ClinicManagement.Controllers
             return conn.Query<dynamic>(sql, new { Keyword = keyword.Trim() }).ToList();
         }
         //Lấy danh sách các đơn thuốc đã kê (Master)
-        public List<dynamic> GetAllPrescriptions(string keyword = "")
+        public List<PrescriptionListItem> GetAllPrescriptions(string keyword = "")
         {
             using var conn = DbContext.GetConnection();
             const string sql = @"
@@ -201,7 +234,7 @@ namespace ClinicManagement.Controllers
                        OR p.FullName LIKE '%' || @Keyword || '%' 
                        OR mr.Diagnosis LIKE '%' || @Keyword || '%')
                 ORDER BY pr.Id DESC;";
-            return conn.Query<dynamic>(sql, new { Keyword = keyword.Trim() }).ToList();
+            return conn.Query<PrescriptionListItem>(sql, new { Keyword = keyword.Trim() }).ToList();
         }
         //Lấy chi tiết các loại thuốc trong 1 đơn thuốc cụ thể (Detail)
         public List<PrescriptionDetail> GetPrescriptionDetailsById(int prescriptionId)
@@ -213,6 +246,7 @@ namespace ClinicManagement.Controllers
                     pd.PrescriptionId,
                     pd.MedicineId,
                     m.Name AS MedicineName,
+                    m.Unit,
                     pd.Quantity,
                     pd.Dosage,
                     pd.UnitPrice

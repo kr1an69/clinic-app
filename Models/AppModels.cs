@@ -78,9 +78,40 @@ namespace ClinicManagement.Models
         public string? Dosage { get; set; }
         public double UnitPrice { get; set; }
 
-        // Tên thuốc & thành tiền hiển thị trên DataGridView
+        // Tên thuốc, đơn vị tính, tồn kho & thành tiền hiển thị trên DataGridView
         public string? MedicineName { get; set; }
+        public string? Unit { get; set; }
+        public int StockQuantity { get; set; }
+        public int RemainingStock => StockQuantity - Quantity;
         public double SubTotal => Quantity * UnitPrice;
+    }
+
+    public class PendingPrescriptionItem
+    {
+        public int PrescriptionId { get; set; }
+        public int MedicalRecordId { get; set; }
+        public int? QueueId { get; set; }
+        public int? QueueNumber { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Diagnosis { get; set; }
+        public double ExamFee { get; set; }
+        public double MedicineFee { get; set; }
+        public double TotalAmount => ExamFee + MedicineFee;
+        public DateTime CreatedAt { get; set; }
+    }
+    public class PrescriptionListItem
+    {
+        public int Id { get; set; }
+        public string PrescriptionCode { get; set; } = string.Empty;
+        public int MedicalRecordId { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Diagnosis { get; set; }
+        public double TotalAmount { get; set; }
+        public int IsDispensed { get; set; }
+        public string DispensedStatus { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
     }
 
     public class Invoice
@@ -101,5 +132,21 @@ namespace ClinicManagement.Models
         public int TotalPatients { get; set; }
         public int CompletedCount { get; set; }
         public int WaitingCount { get; set; }
+    }
+
+    public class InvoiceHistoryItem
+    {
+        public int InvoiceId { get; set; }
+        public int MedicalRecordId { get; set; }
+        public int? PrescriptionId { get; set; }
+        public string PatientName { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? Diagnosis { get; set; }
+        public string? DoctorName { get; set; }
+        public string? CashierName { get; set; }
+        public double ExamFee { get; set; }
+        public double MedicineFee { get; set; }
+        public double TotalAmount { get; set; }
+        public DateTime PaidAt { get; set; }
     }
 }

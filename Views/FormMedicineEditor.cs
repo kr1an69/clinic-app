@@ -11,7 +11,7 @@ using FontAwesome.Sharp;
 
 namespace ClinicManagement.Views
 {
-    public class FormMedicineEditor : Form
+    public class FormMedicineEditor : BaseForm
     {
         private readonly PharmacyController _controller = new();
         private readonly int? _initialMedicineId;
@@ -50,72 +50,41 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Thêm Thuốc Mới & Nhập Bổ Sung Tồn Kho";
-            this.Size = new Size(1180, 750);
-            this.MinimumSize = new Size(1100, 700);
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.AutoScaleMode = AutoScaleMode.Dpi;
-            this.Font = new Font("Segoe UI", 9.5F, FontStyle.Regular);
-            this.BackColor = Color.FromArgb(245, 247, 250);
-            this.Padding = new Padding(16);
+            this.ConfigureAsFixedDialog(baseWidth: 1080, baseHeight: 650);
 
-            // Bố cục tổng thể 3 hàng: Tiêu đề trên cùng, 2 GroupBox ở giữa, Nút đóng ở dưới
+            // Bố cục tổng thể 3 hàng: Header trên cùng, 2 GroupBox ở giữa, Nút đóng ở dưới
             var rootLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 3
+                RowCount = 3,
+                BackColor = UiHelper.BgMain,
+                Padding = Padding.Empty,
+                Margin = Padding.Empty
             };
             rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            // 1. Header tiêu đề
-            var headerPanel = new Panel
-            {
-                Dock = DockStyle.Top,
-                AutoSize = true,
-                Margin = new Padding(0, 0, 0, 12)
-            };
-
-            var lblTitle = new Label
-            {
-                Text = "QUẢN LÝ NHẬP KHO && THÊM THUỐC MỚI",
-                Font = new Font("Segoe UI", 13F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                AutoSize = true,
-                Location = new Point(0, 0)
-            };
-
-            var lblSubtitle = new Label
-            {
-                Text = "Thêm danh mục thuốc mới vào kho hoặc nhập bổ sung số lượng cho thuốc đã có sẵn.",
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
-                ForeColor = UiHelper.SecondaryGray,
-                AutoSize = true,
-                Location = new Point(0, 26)
-            };
-
-            headerPanel.Controls.Add(lblTitle);
-            headerPanel.Controls.Add(lblSubtitle);
+            var headerBanner = UiHelper.CreateHeaderBanner(
+                "QUẢN LÝ NHẬP KHO & THÊM THUỐC MỚI",
+                "Thêm danh mục thuốc mới vào kho hoặc nhập bổ sung số lượng cho thuốc đã có sẵn");
 
             // 2. Khu vực nội dung chia 2 cột đều nhau
             var contentLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
-                RowCount = 1
+                RowCount = 1,
+                Padding = UiHelper.Pad(14, 12, 14, 6),
+                Margin = Padding.Empty
             };
             contentLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             contentLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             contentLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
-            // Cột trái: Thêm thuốc mới
             var grpAddNew = BuildAddNewGroupBox();
-            // Cột phải: Nhập bổ sung tồn kho
             var grpRestock = BuildRestockGroupBox();
 
             contentLayout.Controls.Add(grpAddNew, 0, 0);
@@ -124,17 +93,19 @@ namespace ClinicManagement.Views
             // 3. Footer dưới cùng chứa nút Đóng
             var footerFlow = new FlowLayoutPanel
             {
-                Dock = DockStyle.Fill,
+                Dock = DockStyle.Top,
                 AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 FlowDirection = FlowDirection.RightToLeft,
-                Margin = new Padding(0, 12, 0, 0)
+                Padding = UiHelper.Pad(14, 4, 14, 12),
+                Margin = Padding.Empty
             };
 
             var btnClose = UiHelper.CreateTextButton("Đóng / Quay lại", UiHelper.SecondaryGray, 130, 38);
             btnClose.Click += (_, _) => this.Close();
             footerFlow.Controls.Add(btnClose);
 
-            rootLayout.Controls.Add(headerPanel, 0, 0);
+            rootLayout.Controls.Add(headerBanner, 0, 0);
             rootLayout.Controls.Add(contentLayout, 0, 1);
             rootLayout.Controls.Add(footerFlow, 0, 2);
 
@@ -144,263 +115,271 @@ namespace ClinicManagement.Views
         // Xây dựng khối bên trái: Thêm thuốc mới
         private GroupBox BuildAddNewGroupBox()
         {
-            var grp = new GroupBox
-            {
-                Text = "1. Thêm Thuốc Mới Vào Kho",
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                BackColor = Color.White,
-                Padding = new Padding(16, 14, 16, 14),
-                Margin = new Padding(0, 0, 8, 0)
-            };
+            var grp = UiHelper.CreateGroupBox(
+                "1. Thêm Thuốc Mới Vào Kho",
+                UiHelper.DarkText,
+                UiHelper.Pad(14, 10, 14, 12),
+                UiHelper.Pad(0, 0, 8, 0));
 
-            var layout = new TableLayoutPanel
+            var outerLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 8,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular)
+                ColumnCount = 1,
+                RowCount = 2,
+                Margin = Padding.Empty
             };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 140F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            outerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            outerLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            outerLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            for (int i = 0; i < 7; i++)
+            var formGrid = UiHelper.CreateFormGrid(labelColumnBaseWidth: 135);
+
+            _txtNewCode = new TextBox
             {
-                layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F));
-            }
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+                Font = UiHelper.FontRegular,
+                CharacterCasing = CharacterCasing.Upper,
+                PlaceholderText = "VD: MED009",
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
+            };
 
-            // Mã thuốc
-            var lblCode = new Label { Text = "Mã thuốc (*):", Anchor = AnchorStyles.Left, AutoSize = true };
-            _txtNewCode = new TextBox { Dock = DockStyle.Fill, CharacterCasing = CharacterCasing.Upper, PlaceholderText = "VD: MED009" };
+            _txtNewName = new TextBox
+            {
+                Font = UiHelper.FontRegular,
+                PlaceholderText = "VD: Paracetamol 500mg",
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
+            };
 
-            // Tên thuốc
-            var lblName = new Label { Text = "Tên thuốc (*):", Anchor = AnchorStyles.Left, AutoSize = true };
-            _txtNewName = new TextBox { Dock = DockStyle.Fill, PlaceholderText = "VD: Paracetamol 500mg" };
-
-            // Đơn vị tính
-            var lblUnit = new Label { Text = "Đơn vị tính:", Anchor = AnchorStyles.Left, AutoSize = true };
-            _cboNewUnit = new ComboBox { Dock = DockStyle.Fill, DropDownStyle = ComboBoxStyle.DropDownList };
+            _cboNewUnit = new ComboBox
+            {
+                Font = UiHelper.FontRegular,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
+            };
             _cboNewUnit.Items.AddRange(new object[] { "Viên", "Vỉ", "Hộp", "Chai", "Lọ", "Gói", "Tuýp", "Ống" });
             _cboNewUnit.SelectedIndex = 0;
 
-            // Đơn giá bán
-            var lblPrice = new Label { Text = "Đơn giá (VNĐ):", Anchor = AnchorStyles.Left, AutoSize = true };
             _nudNewPrice = new NumericUpDown
             {
-                Dock = DockStyle.Fill,
+                Font = UiHelper.FontRegular,
                 Minimum = 0,
                 Maximum = 100000000,
                 Increment = 1000,
                 ThousandsSeparator = true,
-                Value = 10000
+                Value = 10000,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
             };
 
-            // Tồn kho ban đầu
-            var lblStock = new Label { Text = "Tồn ban đầu:", Anchor = AnchorStyles.Left, AutoSize = true };
             _nudNewStock = new NumericUpDown
             {
-                Dock = DockStyle.Fill,
+                Font = UiHelper.FontRegular,
                 Minimum = 0,
                 Maximum = 100000,
                 ThousandsSeparator = true,
-                Value = 100
+                Value = 100,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
             };
 
-            // Cảnh báo tồn tối thiểu
-            var lblMinAlert = new Label { Text = "Mức báo tồn:", Anchor = AnchorStyles.Left, AutoSize = true };
             _nudNewMinAlert = new NumericUpDown
             {
-                Dock = DockStyle.Fill,
+                Font = UiHelper.FontRegular,
                 Minimum = 0,
                 Maximum = 1000,
-                Value = 10
+                Value = 10,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
             };
 
-            // Hạn sử dụng
-            var lblExpiry = new Label { Text = "Hạn sử dụng:", Anchor = AnchorStyles.Left, AutoSize = true };
             _dtpNewExpiry = new DateTimePicker
             {
-                Dock = DockStyle.Fill,
+                Font = UiHelper.FontRegular,
                 Format = DateTimePickerFormat.Short,
-                Value = DateTime.Today.AddYears(1)
+                Value = DateTime.Today.AddYears(1),
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
             };
 
-            // Nút Lưu thuốc mới
+            UiHelper.AddFormRow(formGrid, UiHelper.CreateLabel("Mã thuốc (*):", UiHelper.FontRegular, UiHelper.DarkText), _txtNewCode);
+            UiHelper.AddFormRow(formGrid, UiHelper.CreateLabel("Tên thuốc (*):", UiHelper.FontRegular, UiHelper.DarkText), _txtNewName);
+            UiHelper.AddFormRow(formGrid, UiHelper.CreateLabel("Đơn vị tính:", UiHelper.FontRegular, UiHelper.DarkText), _cboNewUnit);
+            UiHelper.AddFormRow(formGrid, UiHelper.CreateLabel("Đơn giá (VNĐ):", UiHelper.FontRegular, UiHelper.DarkText), _nudNewPrice);
+            UiHelper.AddFormRow(formGrid, UiHelper.CreateLabel("Tồn ban đầu:", UiHelper.FontRegular, UiHelper.DarkText), _nudNewStock);
+            UiHelper.AddFormRow(formGrid, UiHelper.CreateLabel("Mức báo tồn:", UiHelper.FontRegular, UiHelper.DarkText), _nudNewMinAlert);
+            UiHelper.AddFormRow(formGrid, UiHelper.CreateLabel("Hạn sử dụng:", UiHelper.FontRegular, UiHelper.DarkText), _dtpNewExpiry);
+
             var btnFlow = new FlowLayoutPanel
             {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                Margin = new Padding(0, 10, 0, 0)
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                FlowDirection = FlowDirection.RightToLeft,
+                Margin = UiHelper.Pad(0, 12, 0, 0)
             };
             _btnAddNew = UiHelper.CreateButton("Lưu Thuốc Mới Vào Kho", IconChar.Plus, UiHelper.SuccessGreen, 230, 38);
             _btnAddNew.Click += BtnAddNew_Click;
             btnFlow.Controls.Add(_btnAddNew);
 
-            layout.Controls.Add(lblCode, 0, 0);
-            layout.Controls.Add(_txtNewCode, 1, 0);
-            layout.Controls.Add(lblName, 0, 1);
-            layout.Controls.Add(_txtNewName, 1, 1);
-            layout.Controls.Add(lblUnit, 0, 2);
-            layout.Controls.Add(_cboNewUnit, 1, 2);
-            layout.Controls.Add(lblPrice, 0, 3);
-            layout.Controls.Add(_nudNewPrice, 1, 3);
-            layout.Controls.Add(lblStock, 0, 4);
-            layout.Controls.Add(_nudNewStock, 1, 4);
-            layout.Controls.Add(lblMinAlert, 0, 5);
-            layout.Controls.Add(_nudNewMinAlert, 1, 5);
-            layout.Controls.Add(lblExpiry, 0, 6);
-            layout.Controls.Add(_dtpNewExpiry, 1, 6);
-            layout.Controls.Add(btnFlow, 1, 7);
+            outerLayout.Controls.Add(formGrid, 0, 0);
+            outerLayout.Controls.Add(btnFlow, 0, 1);
 
-            grp.Controls.Add(layout);
+            grp.Controls.Add(outerLayout);
             return grp;
         }
 
         // Xây dựng khối bên phải: Nhập bổ sung tồn kho cho thuốc đã có
         private GroupBox BuildRestockGroupBox()
         {
-            var grp = new GroupBox
-            {
-                Text = "2. Nhập Bổ Sung Tồn Kho (Thuốc Đã Có)",
-                Dock = DockStyle.Fill,
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
-                ForeColor = UiHelper.DarkText,
-                BackColor = Color.White,
-                Padding = new Padding(16, 14, 16, 14),
-                Margin = new Padding(8, 0, 0, 0)
-            };
+            var grp = UiHelper.CreateGroupBox(
+                "2. Nhập Bổ Sung Tồn Kho (Thuốc Đã Có)",
+                UiHelper.DarkText,
+                UiHelper.Pad(14, 10, 14, 12),
+                UiHelper.Pad(8, 0, 0, 0));
 
-            var layout = new TableLayoutPanel
+            var outerLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 7,
-                Font = new Font("Segoe UI", 9.5F, FontStyle.Regular)
+                ColumnCount = 1,
+                RowCount = 3,
+                Margin = Padding.Empty
             };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            outerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            outerLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            outerLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            outerLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // Chọn thuốc
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 125F)); // Panel thông tin hiện tại
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // Số lượng nhập
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // Cập nhật đơn giá
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 40F)); // Cập nhật hạn dùng
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F)); // Nút bấm
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            var topGrid = UiHelper.CreateFormGrid(labelColumnBaseWidth: 145);
 
-            // Chọn thuốc
-            var lblSelect = new Label { Text = "Chọn thuốc (*):", Anchor = AnchorStyles.Left, AutoSize = true };
             _cboSelectMedicine = new ComboBox
             {
-                Dock = DockStyle.Fill,
+                Font = UiHelper.FontRegular,
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                DropDownWidth = 600
+                DropDownWidth = UiHelper.S(520),
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
             };
             _cboSelectMedicine.SelectedIndexChanged += (_, _) => UpdateSelectedMedicineInfo();
+            UiHelper.AddFormRow(topGrid, UiHelper.CreateLabel("Chọn thuốc (*):", UiHelper.FontRegular, UiHelper.DarkText), _cboSelectMedicine);
 
-            // Panel hiển thị thông tin thuốc hiện tại
-            var pnlInfo = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.FromArgb(240, 244, 248),
-                BorderStyle = BorderStyle.FixedSingle,
-                Padding = new Padding(14, 10, 14, 10),
-                Margin = new Padding(0, 4, 0, 8)
-            };
-
+            // Thẻ hiển thị thông tin thuốc hiện tại
             var infoLayout = new TableLayoutPanel
             {
-                Dock = DockStyle.Fill,
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 ColumnCount = 2,
-                RowCount = 2
+                RowCount = 2,
+                BackColor = UiHelper.MutedInputBg,
+                Padding = UiHelper.Pad(12, 8, 12, 8),
+                Margin = UiHelper.Pad(0, 6, 0, 10)
             };
             infoLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             infoLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            infoLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            infoLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            infoLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            infoLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            _lblCurrentCode = new Label { Text = "Mã thuốc: --", AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Regular), Anchor = AnchorStyles.Left, Margin = new Padding(4, 4, 4, 4) };
-            _lblCurrentStock = new Label { Text = "Tồn kho: --", AutoSize = true, Font = new Font("Segoe UI", 10F, FontStyle.Bold), ForeColor = UiHelper.PrimaryBlue, Anchor = AnchorStyles.Left, Margin = new Padding(4, 4, 4, 4) };
-            _lblCurrentPrice = new Label { Text = "Đơn giá: --", AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Regular), Anchor = AnchorStyles.Left, Margin = new Padding(4, 4, 4, 4) };
-            _lblCurrentExpiry = new Label { Text = "Hạn dùng: --", AutoSize = true, Font = new Font("Segoe UI", 9.5F, FontStyle.Regular), Anchor = AnchorStyles.Left, Margin = new Padding(4, 4, 4, 4) };
+            _lblCurrentCode = UiHelper.CreateLabel("Mã thuốc: --", UiHelper.FontRegular, UiHelper.DarkText, UiHelper.Pad(2, 3, 4, 3));
+            _lblCurrentStock = UiHelper.CreateLabel("Tồn kho: --", UiHelper.FontBold, UiHelper.PrimaryBlue, UiHelper.Pad(2, 3, 4, 3));
+            _lblCurrentPrice = UiHelper.CreateLabel("Đơn giá: --", UiHelper.FontRegular, UiHelper.DarkText, UiHelper.Pad(2, 3, 4, 3));
+            _lblCurrentExpiry = UiHelper.CreateLabel("Hạn dùng: --", UiHelper.FontRegular, UiHelper.DarkText, UiHelper.Pad(2, 3, 4, 3));
 
             infoLayout.Controls.Add(_lblCurrentCode, 0, 0);
             infoLayout.Controls.Add(_lblCurrentStock, 1, 0);
             infoLayout.Controls.Add(_lblCurrentPrice, 0, 1);
             infoLayout.Controls.Add(_lblCurrentExpiry, 1, 1);
-            pnlInfo.Controls.Add(infoLayout);
 
-            // Số lượng nhập thêm
-            var lblAddQty = new Label { Text = "Số lượng nhập (*):", Anchor = AnchorStyles.Left, AutoSize = true };
+            var bottomGrid = UiHelper.CreateFormGrid(labelColumnBaseWidth: 145);
+
             _nudAddQty = new NumericUpDown
             {
-                Dock = DockStyle.Fill,
+                Font = UiHelper.FontRegular,
                 Minimum = 1,
                 Maximum = 100000,
                 ThousandsSeparator = true,
-                Value = 50
+                Value = 50,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
             };
 
-            // Tùy chọn cập nhật giá mới
             _chkUpdatePrice = new CheckBox
             {
                 Text = "Cập nhật giá bán:",
+                Font = UiHelper.FontRegular,
+                ForeColor = UiHelper.DarkText,
                 Anchor = AnchorStyles.Left,
                 AutoSize = true
             };
             _nudRestockPrice = new NumericUpDown
             {
-                Dock = DockStyle.Fill,
+                Font = UiHelper.FontRegular,
                 Minimum = 0,
                 Maximum = 100000000,
                 Increment = 1000,
                 ThousandsSeparator = true,
-                Enabled = false
+                Enabled = false,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
             };
             _chkUpdatePrice.CheckedChanged += (_, _) => _nudRestockPrice.Enabled = _chkUpdatePrice.Checked;
 
-            // Tùy chọn cập nhật hạn dùng mới
             _chkUpdateExpiry = new CheckBox
             {
                 Text = "Cập nhật hạn dùng:",
+                Font = UiHelper.FontRegular,
+                ForeColor = UiHelper.DarkText,
                 Anchor = AnchorStyles.Left,
                 AutoSize = true
             };
             _dtpRestockExpiry = new DateTimePicker
             {
-                Dock = DockStyle.Fill,
+                Font = UiHelper.FontRegular,
                 Format = DateTimePickerFormat.Short,
                 Value = DateTime.Today.AddYears(1),
-                Enabled = false
+                Enabled = false,
+                Anchor = AnchorStyles.Left | AnchorStyles.Right,
+                Margin = UiHelper.Pad(0, 4, 0, 4)
             };
             _chkUpdateExpiry.CheckedChanged += (_, _) => _dtpRestockExpiry.Enabled = _chkUpdateExpiry.Checked;
 
-            // Nút Xác nhận nhập kho
+            UiHelper.AddFormRow(bottomGrid, UiHelper.CreateLabel("Số lượng nhập (*):", UiHelper.FontRegular, UiHelper.DarkText), _nudAddQty);
+            UiHelper.AddFormRow(bottomGrid, _chkUpdatePrice, _nudRestockPrice);
+            UiHelper.AddFormRow(bottomGrid, _chkUpdateExpiry, _dtpRestockExpiry);
+
             var btnFlow = new FlowLayoutPanel
             {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                Margin = new Padding(0, 10, 0, 0)
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                FlowDirection = FlowDirection.RightToLeft,
+                Margin = UiHelper.Pad(0, 12, 0, 0)
             };
             _btnRestock = UiHelper.CreateButton("Xác Nhận Nhập Kho", IconChar.BoxesStacked, UiHelper.PrimaryBlue, 220, 38);
             _btnRestock.Click += BtnRestock_Click;
             btnFlow.Controls.Add(_btnRestock);
 
-            layout.Controls.Add(lblSelect, 0, 0);
-            layout.Controls.Add(_cboSelectMedicine, 1, 0);
-            layout.Controls.Add(new Label { Text = "Thông tin hiện tại:", Anchor = AnchorStyles.Left, AutoSize = true }, 0, 1);
-            layout.Controls.Add(pnlInfo, 1, 1);
-            layout.Controls.Add(lblAddQty, 0, 2);
-            layout.Controls.Add(_nudAddQty, 1, 2);
-            layout.Controls.Add(_chkUpdatePrice, 0, 3);
-            layout.Controls.Add(_nudRestockPrice, 1, 3);
-            layout.Controls.Add(_chkUpdateExpiry, 0, 4);
-            layout.Controls.Add(_dtpRestockExpiry, 1, 4);
-            layout.Controls.Add(btnFlow, 1, 5);
+            var middleContainer = new TableLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                ColumnCount = 1,
+                RowCount = 2,
+                Margin = Padding.Empty
+            };
+            middleContainer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            middleContainer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            middleContainer.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            middleContainer.Controls.Add(infoLayout, 0, 0);
+            middleContainer.Controls.Add(bottomGrid, 0, 1);
 
-            grp.Controls.Add(layout);
+            outerLayout.Controls.Add(topGrid, 0, 0);
+            outerLayout.Controls.Add(middleContainer, 0, 1);
+            outerLayout.Controls.Add(btnFlow, 0, 2);
+
+            grp.Controls.Add(outerLayout);
             return grp;
         }
 
@@ -497,6 +476,26 @@ namespace ClinicManagement.Views
                 return;
             }
 
+            if (unitPrice < 0 || stockQty < 0 || minAlert < 0)
+            {
+                MessageBox.Show("Đơn giá, tồn kho và mức cảnh báo phải lớn hơn hoặc bằng 0!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_dtpNewExpiry.Value.Date < DateTime.Today)
+            {
+                var confirmExpired = MessageBox.Show(
+                    "Hạn sử dụng đang chọn nhỏ hơn ngày hiện tại (thuốc đã hết hạn).\nBạn có chắc chắn muốn tiếp tục lưu không?",
+                    "Cảnh báo hạn sử dụng",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+                if (confirmExpired != DialogResult.Yes)
+                {
+                    _dtpNewExpiry.Focus();
+                    return;
+                }
+            }
+
             var newMedicine = new Medicine
             {
                 Code = code,
@@ -554,6 +553,25 @@ namespace ClinicManagement.Views
 
             double? newPrice = _chkUpdatePrice.Checked ? (double)_nudRestockPrice.Value : null;
             string? newExpiry = _chkUpdateExpiry.Checked ? _dtpRestockExpiry.Value.ToString("yyyy-MM-dd") : null;
+
+            if (newPrice.HasValue && newPrice.Value < 0)
+            {
+                MessageBox.Show("Đơn giá mới phải lớn hơn hoặc bằng 0!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_chkUpdateExpiry.Checked && _dtpRestockExpiry.Value.Date < DateTime.Today)
+            {
+                var confirmExpired = MessageBox.Show(
+                    "Hạn sử dụng mới đang chọn nhỏ hơn ngày hiện tại.\nBạn có chắc chắn muốn cập nhật không?",
+                    "Cảnh báo hạn sử dụng",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+                if (confirmExpired != DialogResult.Yes)
+                {
+                    return;
+                }
+            }
 
             try
             {
