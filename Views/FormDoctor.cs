@@ -848,11 +848,14 @@ namespace ClinicManagement.Views
 
                 int recordId = _controller.SaveMedicalRecordAndPrescription(record, _prescriptionDetails);
                 double medTotal = _prescriptionDetails.Sum(d => d.SubTotal);
+                string medInfo = _prescriptionDetails.Count > 0
+                    ? $"• Tổng tiền thuốc ({_prescriptionDetails.Count} loại): {medTotal:N0} đ\n"
+                    : "• Đơn thuốc: Không kê thuốc (chỉ thu tiền công khám)\n";
 
                 MessageBox.Show(
                     $"Đã lưu Hồ sơ bệnh án (Mã BA-{recordId:D3}) và Đơn thuốc cho bệnh nhân {_currentPatient.PatientName}!\n\n" +
                     $"• Tiền công khám: {record.ExamFee:N0} đ\n" +
-                    $"• Tổng tiền thuốc ({_prescriptionDetails.Count} loại): {medTotal:N0} đ\n" +
+                    medInfo +
                     $"• Trạng thái hàng đợi đã chuyển sang: Chờ thu ngân thanh toán (PendingPayment).",
                     "Hoàn Tất Khám & Kê Đơn",
                     MessageBoxButtons.OK,
@@ -891,8 +894,8 @@ namespace ClinicManagement.Views
                 dialogRef.TopLevel = true;
                 dialogRef.FormBorderStyle = FormBorderStyle.Sizable;
                 dialogRef.StartPosition = FormStartPosition.CenterParent;
-                dialogRef.Size = new Size(1120, 680);
-                dialogRef.MinimumSize = new Size(980, 600);
+                dialogRef.Size = UiHelper.SSize(1120, 680);
+                dialogRef.MinimumSize = UiHelper.SSize(980, 600);
                 dialogRef.ShowDialog(this);
             }
 
