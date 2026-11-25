@@ -143,10 +143,10 @@ namespace ClinicManagement.Views
                 _menuLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             }
 
-            _btnReception = UiHelper.CreateSidebarButton("1. Lễ Tân & Bệnh Nhân", IconChar.UserInjured);
-            _btnQueueMonitor = UiHelper.CreateSidebarButton("1. Màn Hình Chờ (TV)", IconChar.Tv);
-            _btnDoctor = UiHelper.CreateSidebarButton("2. Bác Sĩ & Kê Đơn", IconChar.UserMd);
-            _btnPharmacy = UiHelper.CreateSidebarButton("3. Kho & Thu Ngân", IconChar.Pills);
+            _btnReception = UiHelper.CreateSidebarButton("Lễ Tân & Bệnh Nhân", IconChar.UserInjured);
+            _btnQueueMonitor = UiHelper.CreateSidebarButton("Màn Hình Chờ (TV)", IconChar.Tv);
+            _btnDoctor = UiHelper.CreateSidebarButton("Bác Sĩ & Kê Đơn", IconChar.UserMd);
+            _btnPharmacy = UiHelper.CreateSidebarButton("Kho & Thu Ngân", IconChar.Pills);
 
             _menuLayout.Controls.Add(_btnReception, 0, 0);
             _menuLayout.Controls.Add(_btnQueueMonitor, 0, 1);
@@ -251,8 +251,11 @@ namespace ClinicManagement.Views
                     break;
                 
                 default:
-                    SetActiveMenuButton(_btnReception);
-                    LoadForm(new FormReception(), "Sẵn sàng.");
+                    _btnReception.Visible = false;
+                    _btnQueueMonitor.Visible = false;
+                    _btnDoctor.Visible = false;
+                    _btnPharmacy.Visible = false;
+                    _lblStatus.Text = "Tài khoản chưa được cấp quyền phân hệ nào.";
                     break;
             }
         }

@@ -23,7 +23,7 @@ namespace ClinicManagement
             while (true)
             {
                 using var loginForm = new FormLogin();
-                if (loginForm.ShowDialog() != DialogResult.OK && loginForm.LoggedInUser == null)
+                if (loginForm.ShowDialog() != DialogResult.OK || loginForm.LoggedInUser == null)
                 {
                     break;
                 }
