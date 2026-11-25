@@ -10,7 +10,7 @@ using FontAwesome.Sharp;
 namespace ClinicManagement.Views
 {
     /// <summary>
-    /// SCREEN #09: QUẢN LÝ & CHI TIẾT ĐƠN THUỐC ĐÃ KÊ (Master-Detail)
+    /// QUẢN LÝ & CHI TIẾT ĐƠN THUỐC ĐÃ KÊ (Master-Detail)
     /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
     /// </summary>
     public class FormPrescriptionList : BaseForm

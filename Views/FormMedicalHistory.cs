@@ -9,7 +9,7 @@ using FontAwesome.Sharp;
 namespace ClinicManagement.Views
 {
     /// <summary>
-    /// SCREEN #08: TRA CỨU LỊCH SỬ KHÁM & HỒ SƠ BỆNH ÁN
+    /// TRA CỨU LỊCH SỬ KHÁM & HỒ SƠ BỆNH ÁN
     /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
     /// </summary>
     public class FormMedicalHistory : BaseForm
