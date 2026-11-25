@@ -12,7 +12,7 @@ using FontAwesome.Sharp;
 namespace ClinicManagement.Views
 {
     /// <summary>
-    /// SCREEN #10: TRA CỨU DANH MỤC THUỐC KHẢ DỤNG & TỒN KHO CHO BÁC SĨ
+    /// TRA CỨU DANH MỤC THUỐC KHẢ DỤNG & TỒN KHO CHO BÁC SĨ
     /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
     /// </summary>
     public class FormDoctorMedicineView : BaseForm

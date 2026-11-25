@@ -117,19 +117,24 @@ namespace ClinicManagement.Controllers
                     record.Diagnosis,
                     ExamFee = record.ExamFee > 0 ? record.ExamFee : 50000
                 }, transaction);
-                //Nếu có kê đơn thuốc thì lưu bảng Prescriptions và PrescriptionDetails
+                // Luôn tạo bản ghi Prescriptions (kể cả khi không kê thuốc, TotalAmount = 0 để Thu ngân thu tiền công khám và hoàn tất ca khám)
+                double totalMedicineAmount = (details != null && details.Count > 0)
+                    ? details.Sum(d => d.Quantity * d.UnitPrice)
+                    : 0;
+
+                const string insertPrescriptionSql = @"
+                    INSERT INTO Prescriptions (MedicalRecordId, TotalAmount, IsDispensed)
+                    VALUES (@MedicalRecordId, @TotalAmount, 0);
+                    SELECT last_insert_rowid();";
+                int prescriptionId = conn.ExecuteScalar<int>(insertPrescriptionSql, new
+                {
+                    MedicalRecordId = medicalRecordId,
+                    TotalAmount = totalMedicineAmount
+                }, transaction);
+
+                // Nếu có thuốc được kê thì lưu chi tiết các loại thuốc vào bảng PrescriptionDetails
                 if (details != null && details.Count > 0)
                 {
-                    double totalMedicineAmount = details.Sum(d => d.Quantity * d.UnitPrice);
-                    const string insertPrescriptionSql = @"
-                        INSERT INTO Prescriptions (MedicalRecordId, TotalAmount, IsDispensed)
-                        VALUES (@MedicalRecordId, @TotalAmount, 0);
-                        SELECT last_insert_rowid();";
-                    int prescriptionId = conn.ExecuteScalar<int>(insertPrescriptionSql, new
-                    {
-                        MedicalRecordId = medicalRecordId,
-                        TotalAmount = totalMedicineAmount
-                    }, transaction);
                     const string insertDetailSql = @"
                         INSERT INTO PrescriptionDetails (PrescriptionId, MedicineId, Quantity, Dosage, UnitPrice)
                         VALUES (@PrescriptionId, @MedicineId, @Quantity, @Dosage, @UnitPrice);";

@@ -8,9 +8,15 @@ namespace ClinicManagement.Views
 {
     public class FormMain : BaseForm
     {
+        public bool IsLoggedOut { get; private set; } = false;
+        
         private Panel _panelHeader = null!;
         private IconPictureBox _iconHeader = null!;
         private Label _lblHeader = null!;
+
+        private Label _lblUserInfo = null!;
+        private IconButton _btnLogout = null!;
+        
         private Panel _panelMenu = null!;
         private TableLayoutPanel _menuLayout = null!;
         private IconButton _btnReception = null!;
@@ -25,6 +31,7 @@ namespace ClinicManagement.Views
         public FormMain()
         {
             InitializeComponent();
+            ApplyRolePermissions();
         }
 
         private void InitializeComponent()
@@ -43,39 +50,25 @@ namespace ClinicManagement.Views
                 Padding = UiHelper.Pad(16, 0, 16, 0)
             };
 
-            var headerFrameLayout = new TableLayoutPanel
+            var headerLeft = new FlowLayoutPanel
             {
-                Dock = DockStyle.Fill,
-                ColumnCount = 1,
-                RowCount = 1,
-                BackColor = Color.Transparent
-            };
-            headerFrameLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            headerFrameLayout.RowStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-
-            var headerPart = new TableLayoutPanel
-            {
+                Dock = DockStyle.Left,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                ColumnCount = 2,
-                RowCount = 1,
-                Anchor = AnchorStyles.None,
-                BackColor = Color.Transparent,
-                Margin = Padding.Empty
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                BackColor = Color.Transparent
             };
-            headerPart.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            headerPart.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            headerPart.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             _iconHeader = new IconPictureBox
             {
                 IconChar = IconChar.Hospital,
                 IconFont = IconFont.Auto,
                 IconColor = Color.White,
-                IconSize = UiHelper.S(40),
-                Size = UiHelper.SSize(40, 40),
+                IconSize = UiHelper.S(38),
+                Size = UiHelper.SSize(38, 38),
                 Anchor = AnchorStyles.Left,
-                Margin = UiHelper.Pad(0, 4, 12, 0),
+                Margin = UiHelper.Pad(0, 13, 10, 0),
                 BackColor = Color.Transparent
             };
 
@@ -88,14 +81,44 @@ namespace ClinicManagement.Views
                 Font = new Font("Segoe UI", 12.5F, FontStyle.Bold),
                 TextAlign = ContentAlignment.MiddleLeft,
                 Anchor = AnchorStyles.Left,
-                Margin = Padding.Empty
+                Margin = UiHelper.Pad(0, 19,0, 0)
             };
 
-            headerPart.Controls.Add(_iconHeader, 0, 0);
-            headerPart.Controls.Add(_lblHeader, 1, 0);
-            headerFrameLayout.Controls.Add(headerPart, 0, 0);
-            _panelHeader.Controls.Add(headerFrameLayout);
-
+            headerLeft.Controls.Add(_iconHeader);
+            headerLeft.Controls.Add(_lblHeader);
+            
+            var headerRight = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Right,
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                FlowDirection = FlowDirection.RightToLeft,
+                WrapContents = false,
+                BackColor = Color.Transparent,
+            };
+            
+            _btnLogout = UiHelper.CreateButton("Đăng xuất", IconChar.RightFromBracket, UiHelper.DangerRed, minWidth: 105, height: 36, baseIconSize: 16);
+            _btnLogout.Margin = UiHelper.Pad(12, 14, 0, 0);
+            _btnLogout.Click += BtnLogout_Click;
+            
+            string userName = AppSession.CurrentUser?.FullName ?? "Chưa đăng nhập";
+            string roleName = AppSession.GetRoleDisplayName(AppSession.CurrentUser?.Role ?? "");
+            _lblUserInfo = new Label
+            {
+                Text = $"{userName} ({roleName})",
+                AutoSize = true,
+                ForeColor = Color.White,
+                Font = UiHelper.FontBold,
+                Anchor = AnchorStyles.Right,
+                TextAlign = ContentAlignment.MiddleRight,
+                Margin = UiHelper.Pad(0, 22, 4, 0)
+            };
+            headerRight.Controls.Add(_btnLogout);
+            headerRight.Controls.Add(_lblUserInfo);
+            
+            _panelHeader.Controls.Add(headerRight);
+            _panelHeader.Controls.Add(headerLeft); 
+           
             // 2. Sidebar Menu: Độ rộng, chiều cao nút và Icon đều tự động nhân theo tỷ lệ DPI
             _panelMenu = new Panel
             {
@@ -120,10 +143,10 @@ namespace ClinicManagement.Views
                 _menuLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             }
 
-            _btnReception = UiHelper.CreateSidebarButton("1. Lễ Tân & Bệnh Nhân", IconChar.UserInjured);
-            _btnQueueMonitor = UiHelper.CreateSidebarButton("1. Màn Hình Chờ (TV)", IconChar.Tv);
-            _btnDoctor = UiHelper.CreateSidebarButton("2. Bác Sĩ & Kê Đơn", IconChar.UserMd);
-            _btnPharmacy = UiHelper.CreateSidebarButton("3. Kho & Thu Ngân", IconChar.Pills);
+            _btnReception = UiHelper.CreateSidebarButton("Lễ Tân & Bệnh Nhân", IconChar.UserInjured);
+            _btnQueueMonitor = UiHelper.CreateSidebarButton("Màn Hình Chờ (TV)", IconChar.Tv);
+            _btnDoctor = UiHelper.CreateSidebarButton("Bác Sĩ & Kê Đơn", IconChar.UserMd);
+            _btnPharmacy = UiHelper.CreateSidebarButton("Kho & Thu Ngân", IconChar.Pills);
 
             _menuLayout.Controls.Add(_btnReception, 0, 0);
             _menuLayout.Controls.Add(_btnQueueMonitor, 0, 1);
@@ -183,10 +206,72 @@ namespace ClinicManagement.Views
                 SetActiveMenuButton(_btnPharmacy);
                 LoadForm(new FormPharmacy(), "Phân hệ 3: Thu Phí, Xuất Thuốc, In Ấn && Báo Cáo Kho (Thành viên 3)");
             };
+        }
 
-            // Mặc định mở tab Lễ tân khi khởi động
-            SetActiveMenuButton(_btnReception);
-            LoadForm(new FormReception(), "Phân hệ 1: Tiếp Nhận, Xếp Hàng && Thống Kê Bệnh Nhân (Thành viên 1)");
+        private void ApplyRolePermissions()
+        {
+            string role = AppSession.CurrentUser?.Role ?? string.Empty;
+
+            switch (role)
+            {
+                case AppSession.RoleAdmin:
+                    _btnReception.Visible = true;
+                    _btnQueueMonitor.Visible = true;
+                    _btnDoctor.Visible = true;
+                    _btnPharmacy.Visible = true;
+                    SetActiveMenuButton(_btnReception);
+                    LoadForm(new FormReception(), "Quản trị viên: Toàn quyền truy cập tất cả phân hệ.");
+                    break;
+                
+                case AppSession.RoleReceptionist:
+                    _btnReception.Visible = true;
+                    _btnQueueMonitor.Visible = true;
+                    _btnDoctor.Visible = false;
+                    _btnPharmacy.Visible = false;
+                    SetActiveMenuButton(_btnReception);
+                    LoadForm(new FormReception(), "Lễ tân: Tiếp nhận bệnh nhân & cấp số thứ tự.");
+                    break;
+                
+                case AppSession.RoleDoctor:
+                    _btnReception.Visible = false;
+                    _btnQueueMonitor.Visible = false;
+                    _btnDoctor.Visible = true;
+                    _btnPharmacy.Visible = false;
+                    SetActiveMenuButton(_btnDoctor);
+                    LoadForm(new FormDoctor(), "Bác sĩ: Khám bệnh, chuẩn đoán & kê đơn thuốc");
+                    break;
+                
+                case AppSession.RoleCashier:
+                    _btnReception.Visible = false;
+                    _btnQueueMonitor.Visible = false;
+                    _btnDoctor.Visible = false;
+                    _btnPharmacy.Visible = true;
+                    SetActiveMenuButton(_btnPharmacy);
+                    LoadForm(new FormPharmacy(), "Dược sĩ/ Thu ngân: Thu tiền khám, cấp phát thuốc & quản lý kho.");
+                    break;
+                
+                default:
+                    _btnReception.Visible = false;
+                    _btnQueueMonitor.Visible = false;
+                    _btnDoctor.Visible = false;
+                    _btnPharmacy.Visible = false;
+                    _lblStatus.Text = "Tài khoản chưa được cấp quyền phân hệ nào.";
+                    break;
+            }
+        }
+
+        private void BtnLogout_Click(object? sender, EventArgs e)
+        {
+            var result = MessageBox.Show("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?",
+                "Xác nhận đăng xuất",
+                MessageBoxButtons.YesNo, 
+                MessageBoxIcon.Question);
+            
+            if (result == DialogResult.Yes)
+            {
+                IsLoggedOut = true;
+                this.Close();
+            }
         }
 
         private void SetActiveMenuButton(IconButton selectedButton)

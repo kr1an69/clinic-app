@@ -9,7 +9,7 @@ using FontAwesome.Sharp;
 namespace ClinicManagement.Views
 {
     /// <summary>
-    /// SCREEN #06: DANH SÁCH CHỜ KHÁM & ĐIỀU PHỐI GỌI BỆNH NHÂN
+    ///ANH SÁCH CHỜ KHÁM & ĐIỀU PHỐI GỌI BỆNH NHÂN
     /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
     /// </summary>
     public class FormDoctorQueue : BaseForm
@@ -207,7 +207,7 @@ namespace ClinicManagement.Views
             _btnCancelQueue.Margin = UiHelper.Pad(0, 0, 0, 8);
 
             var lblTip = UiHelper.CreateLabel(
-                text: "💡 Mẹo: Bấm 'Gọi Vào Khám' sẽ phát tín hiệu âm thanh và chuyển trạng thái đồng bộ sang TV phòng chờ.",
+                text: "Mẹo: Bấm 'Gọi Vào Khám' sẽ phát tín hiệu âm thanh và chuyển trạng thái đồng bộ sang TV phòng chờ.",
                 font: new Font("Segoe UI", 8.5F, FontStyle.Italic),
                 foreColor: UiHelper.SecondaryGray,
                 margin: UiHelper.Pad(0, 4, 0, 4));
