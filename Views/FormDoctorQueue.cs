@@ -9,7 +9,7 @@ using FontAwesome.Sharp;
 namespace ClinicManagement.Views
 {
     /// <summary>
-    ///ANH SÁCH CHỜ KHÁM & ĐIỀU PHỐI GỌI BỆNH NHÂN
+    /// DANH SÁCH CHỜ KHÁM & ĐIỀU PHỐI GỌI BỆNH NHÂN
     /// Chuẩn hóa theo BaseForm và UiHelper (DPI-aware).
     /// </summary>
     public class FormDoctorQueue : BaseForm
