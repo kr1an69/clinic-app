@@ -21,6 +21,7 @@ namespace ClinicManagement.Views
         private TextBox _txtSearch = null!;
         private IconButton _btnSearch = null!;
         private IconButton _btnRefresh = null!;
+        private CheckBox _chkOnlyWithMedicines = null!;
         private Label _lblPrescriptionCount = null!;
 
         // Bảng Master: Danh sách đơn thuốc
@@ -122,10 +123,22 @@ namespace ClinicManagement.Views
             _btnRefresh = UiHelper.CreateButton("Hiển thị tất cả", IconChar.Rotate, Color.FromArgb(52, 73, 94), 145, 34);
             _btnRefresh.Margin = UiHelper.Pad(0, 0, 6, 0);
 
+            _chkOnlyWithMedicines = new CheckBox
+            {
+                Text = "Chỉ hiện đơn có thuốc",
+                AutoSize = true,
+                Font = UiHelper.FontRegular,
+                ForeColor = UiHelper.DarkText,
+                Anchor = AnchorStyles.Left,
+                Margin = UiHelper.Pad(8, 6, 0, 0),
+                Cursor = Cursors.Hand
+            };
+
             searchFlow.Controls.Add(lblSearch);
             searchFlow.Controls.Add(_txtSearch);
             searchFlow.Controls.Add(_btnSearch);
             searchFlow.Controls.Add(_btnRefresh);
+            searchFlow.Controls.Add(_chkOnlyWithMedicines);
 
             var rightFlow = new FlowLayoutPanel
             {
@@ -354,8 +367,10 @@ namespace ClinicManagement.Views
             _btnRefresh.Click += (_, _) =>
             {
                 _txtSearch.Clear();
+                _chkOnlyWithMedicines.Checked = false;
                 LoadPrescriptions();
             };
+            _chkOnlyWithMedicines.CheckedChanged += (_, _) => LoadPrescriptions(_txtSearch.Text.Trim());
 
             _txtSearch.KeyDown += (_, e) =>
             {
@@ -368,7 +383,7 @@ namespace ClinicManagement.Views
 
             _dgvPrescriptions.SelectionChanged += (_, _) => OnPrescriptionSelectionChanged();
 
-            // Định dạng màu sắc cột Trạng Thái (Chờ thu phí: Cam, Đã xuất: Xanh lá) & Tooltip hiển thị đầy đủ
+            // Định dạng màu sắc cột Trạng Thái (Chờ thu phí: Cam, Đã xuất/Đã thu: Xanh lá) & Tooltip hiển thị đầy đủ
             _dgvPrescriptions.CellFormatting += (_, e) =>
             {
                 if (e.RowIndex >= 0)
@@ -386,7 +401,7 @@ namespace ClinicManagement.Views
                             e.CellStyle.ForeColor = UiHelper.WarningOrange;
                             e.CellStyle.Font = UiHelper.FontBold;
                         }
-                        else if (status.Contains("Đã xuất"))
+                        else if (status.Contains("Đã xuất") || status.Contains("Đã thu phí"))
                         {
                             e.CellStyle.ForeColor = UiHelper.SuccessGreen;
                             e.CellStyle.Font = UiHelper.FontBold;
@@ -414,6 +429,10 @@ namespace ClinicManagement.Views
             try
             {
                 var prescriptions = _controller.GetAllPrescriptions(keyword);
+                if (_chkOnlyWithMedicines != null && _chkOnlyWithMedicines.Checked)
+                {
+                    prescriptions = prescriptions.Where(p => p.TotalAmount > 0).ToList();
+                }
                 _dgvPrescriptions.Rows.Clear();
 
                 foreach (var item in prescriptions)
@@ -422,16 +441,24 @@ namespace ClinicManagement.Views
                     string patient = item.PatientName;
                     string diagnosis = item.Diagnosis ?? string.Empty;
                     double total = item.TotalAmount;
-                    string status = !string.IsNullOrEmpty(item.DispensedStatus) ? item.DispensedStatus : (item.IsDispensed == 1 ? "Đã xuất thuốc" : "Chờ thu phí");
+                    bool isNoMedicine = total <= 0;
+                    string totalDisplay = isNoMedicine ? "0 đ (Không thuốc)" : $"{total:N0} đ";
+                    string status = isNoMedicine
+                        ? (item.IsDispensed == 1 ? "Đã thu phí" : "Chờ thu phí")
+                        : (!string.IsNullOrEmpty(item.DispensedStatus) ? item.DispensedStatus : (item.IsDispensed == 1 ? "Đã xuất thuốc" : "Chờ thu phí"));
 
                     int rowIdx = _dgvPrescriptions.Rows.Add(
                         code,
                         patient,
                         diagnosis,
-                        $"{total:N0} đ",
+                        totalDisplay,
                         status
                     );
                     _dgvPrescriptions.Rows[rowIdx].Tag = item;
+                    if (isNoMedicine)
+                    {
+                        _dgvPrescriptions.Rows[rowIdx].Cells["TotalAmount"].ToolTipText = "Ca khám chỉ thu tiền công khám lâm sàng, bác sĩ không kê đơn thuốc.";
+                    }
                 }
 
                 _lblPrescriptionCount.Text = $"Tổng số: {prescriptions.Count} đơn thuốc";
@@ -472,27 +499,49 @@ namespace ClinicManagement.Views
             string code = !string.IsNullOrEmpty(item.PrescriptionCode) ? item.PrescriptionCode : $"DT-{prescriptionId:D3}";
             string patientName = item.PatientName;
             double totalAmount = item.TotalAmount;
+            bool isNoMedicine = totalAmount <= 0;
 
-            _grpDetails.Text = $"CHI TIẾT THUỐC TRONG ĐƠN #{code} - BN: {patientName}";
-            _lblDetailTotalAmount.Text = $"TỔNG TIỀN THUỐC TRONG ĐƠN: {totalAmount:N0} đ";
+            _grpDetails.Text = isNoMedicine
+                ? $"CHI TIẾT THUỐC TRONG ĐƠN #{code} - BN: {patientName} (KHÔNG KÊ THUỐC)"
+                : $"CHI TIẾT THUỐC TRONG ĐƠN #{code} - BN: {patientName}";
+
+            _lblDetailTotalAmount.Text = isNoMedicine
+                ? "TỔNG TIỀN THUỐC TRONG ĐƠN: 0 đ (Ca chỉ khám lâm sàng, không kê đơn thuốc)"
+                : $"TỔNG TIỀN THUỐC TRONG ĐƠN: {totalAmount:N0} đ";
 
             try
             {
                 var details = _controller.GetPrescriptionDetailsById(prescriptionId);
                 _dgvPrescriptionDetails.Rows.Clear();
 
-                for (int i = 0; i < details.Count; i++)
+                if (details.Count == 0)
                 {
-                    var d = details[i];
-                    string unit = !string.IsNullOrEmpty(d.Unit) ? $" {d.Unit}" : "";
-                    _dgvPrescriptionDetails.Rows.Add(
-                        $"{i + 1:D2}",
-                        d.MedicineName ?? string.Empty,
-                        $"{d.Quantity}{unit}",
-                        $"{d.UnitPrice:N0} đ",
-                        $"{d.SubTotal:N0} đ",
-                        d.Dosage ?? string.Empty
+                    int emptyRow = _dgvPrescriptionDetails.Rows.Add(
+                        "---",
+                        "Ca khám không kê thuốc (chỉ thu tiền công khám)",
+                        "---",
+                        "0 đ",
+                        "0 đ",
+                        "Bác sĩ tư vấn chế độ sinh hoạt & nghỉ ngơi"
                     );
+                    _dgvPrescriptionDetails.Rows[emptyRow].DefaultCellStyle.ForeColor = UiHelper.SecondaryGray;
+                    _dgvPrescriptionDetails.Rows[emptyRow].DefaultCellStyle.Font = new Font(_dgvPrescriptionDetails.Font, FontStyle.Italic);
+                }
+                else
+                {
+                    for (int i = 0; i < details.Count; i++)
+                    {
+                        var d = details[i];
+                        string unit = !string.IsNullOrEmpty(d.Unit) ? $" {d.Unit}" : "";
+                        _dgvPrescriptionDetails.Rows.Add(
+                            $"{i + 1:D2}",
+                            d.MedicineName ?? string.Empty,
+                            $"{d.Quantity}{unit}",
+                            $"{d.UnitPrice:N0} đ",
+                            $"{d.SubTotal:N0} đ",
+                            d.Dosage ?? string.Empty
+                        );
+                    }
                 }
             }
             catch (Exception ex)
