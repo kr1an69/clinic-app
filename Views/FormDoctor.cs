@@ -891,11 +891,6 @@ namespace ClinicManagement.Views
 
             using (dialogRef)
             {
-                dialogRef.TopLevel = true;
-                dialogRef.FormBorderStyle = FormBorderStyle.Sizable;
-                dialogRef.StartPosition = FormStartPosition.CenterParent;
-                dialogRef.Size = UiHelper.SSize(1120, 680);
-                dialogRef.MinimumSize = UiHelper.SSize(980, 600);
                 dialogRef.ShowDialog(this);
             }
 
