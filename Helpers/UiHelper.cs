@@ -201,6 +201,9 @@ namespace ClinicManagement.Helpers
             int baseIconSize = 20,
             TextImageRelation relation = TextImageRelation.ImageBeforeText)
         {
+            Padding basePadding = Pad(12, 2, 12, 2);
+            bool centerCluster = icon != IconChar.None && relation == TextImageRelation.ImageBeforeText;
+
             var btn = new IconButton
             {
                 Text = EscapeMnemonic(text),
@@ -209,12 +212,12 @@ namespace ClinicManagement.Helpers
                 IconColor = Color.White,
                 IconSize = icon != IconChar.None ? S(baseIconSize) : 16,
                 TextImageRelation = relation,
-                TextAlign = ContentAlignment.MiddleCenter,
-                ImageAlign = ContentAlignment.MiddleCenter,
+                TextAlign = centerCluster ? ContentAlignment.MiddleLeft : ContentAlignment.MiddleCenter,
+                ImageAlign = centerCluster ? ContentAlignment.MiddleLeft : ContentAlignment.MiddleCenter,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
                 MinimumSize = SSize(minWidth, height),
-                Padding = Pad(12, 2, 12, 2),
+                Padding = basePadding,
                 FlatStyle = FlatStyle.Flat,
                 BackColor = backColor,
                 ForeColor = Color.White,
@@ -224,16 +227,65 @@ namespace ClinicManagement.Helpers
             };
             btn.FlatAppearance.BorderSize = 0;
 
+            bool isUpdatingPadding = false;
+            void UpdateCenteredPadding()
+            {
+                if (!centerCluster || isUpdatingPadding || btn.Width <= 0 || !btn.IsHandleCreated)
+                {
+                    return;
+                }
+
+                int textWidth;
+                using (var g = btn.CreateGraphics())
+                {
+                    textWidth = TextRenderer.MeasureText(
+                        g,
+                        btn.Text,
+                        btn.Font,
+                        Size.Empty,
+                        TextFormatFlags.SingleLine).Width;
+                }
+
+                float scale = btn.DeviceDpi > 0 ? btn.DeviceDpi / 96f : DpiScale;
+                int gap = (int)Math.Round(6 * scale);
+                int contentWidth = btn.IconSize + gap + textWidth;
+                int naturalWidth = contentWidth + basePadding.Horizontal;
+                int extra = Math.Max(0, btn.Width - naturalWidth);
+
+                int padLeft = basePadding.Left + extra / 2;
+                int padRight = basePadding.Right + (extra - extra / 2);
+
+                if (btn.Padding.Left != padLeft || btn.Padding.Right != padRight)
+                {
+                    isUpdatingPadding = true;
+                    try
+                    {
+                        btn.Padding = new Padding(padLeft, basePadding.Top, padRight, basePadding.Bottom);
+                    }
+                    finally
+                    {
+                        isUpdatingPadding = false;
+                    }
+                }
+            }
+
             if (icon != IconChar.None)
             {
                 void ScaleIcon(object? s, EventArgs e)
                 {
                     float scale = btn.DeviceDpi > 0 ? btn.DeviceDpi / 96f : DpiScale;
                     btn.IconSize = (int)Math.Round(baseIconSize * scale);
+                    UpdateCenteredPadding();
                 }
 
                 btn.HandleCreated += ScaleIcon;
                 btn.DpiChangedAfterParent += ScaleIcon;
+            }
+
+            if (centerCluster)
+            {
+                btn.SizeChanged += (_, _) => UpdateCenteredPadding();
+                btn.TextChanged += (_, _) => UpdateCenteredPadding();
             }
 
             return btn;
