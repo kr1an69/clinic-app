@@ -32,6 +32,9 @@ namespace ClinicManagement.Views
         private DataGridView _dgvPrescriptionDetails = null!;
         private Label _lblDetailTotalAmount = null!;
 
+        // Tái sử dụng Font in nghiêng cho dòng thông báo không kê thuốc (tránh rò rỉ GDI handle)
+        private readonly Font _italicDetailFont = new(UiHelper.FontRegular, FontStyle.Italic);
+
         public FormPrescriptionList(string initialKeyword = "")
         {
             InitializeComponent();
@@ -525,7 +528,7 @@ namespace ClinicManagement.Views
                         "Bác sĩ tư vấn chế độ sinh hoạt & nghỉ ngơi"
                     );
                     _dgvPrescriptionDetails.Rows[emptyRow].DefaultCellStyle.ForeColor = UiHelper.SecondaryGray;
-                    _dgvPrescriptionDetails.Rows[emptyRow].DefaultCellStyle.Font = new Font(_dgvPrescriptionDetails.Font, FontStyle.Italic);
+                    _dgvPrescriptionDetails.Rows[emptyRow].DefaultCellStyle.Font = _italicDetailFont;
                 }
                 else
                 {
@@ -555,6 +558,15 @@ namespace ClinicManagement.Views
             _grpDetails.Text = "CHI TIẾT THUỐC TRONG ĐƠN (PRESCRIPTION DETAILS)";
             _dgvPrescriptionDetails.Rows.Clear();
             _lblDetailTotalAmount.Text = "TỔNG TIỀN THUỐC TRONG ĐƠN: 0 đ";
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _italicDetailFont.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
