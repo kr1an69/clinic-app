@@ -137,12 +137,13 @@ namespace ClinicManagement.Views
                 ColumnCount = 1,
                 BackColor = Color.Transparent
             };
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(165)));
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(52)));
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(48)));
             layout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(48)));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, UiHelper.SF(44)));
 
             _patientCard = new Panel
             {
@@ -207,10 +208,11 @@ namespace ClinicManagement.Views
             _btnCancelQueue.Margin = UiHelper.Pad(0, 0, 0, 8);
 
             var lblTip = UiHelper.CreateLabel(
-                text: "Mẹo: Bấm 'Gọi Vào Khám' sẽ phát tín hiệu âm thanh và chuyển trạng thái đồng bộ sang TV phòng chờ.",
+                text: "Ghi chú: Thao tác 'Gọi Vào Khám' sẽ phát tín hiệu chuông và cập nhật trạng thái đồng bộ sang TV phòng chờ.",
                 font: new Font("Segoe UI", 8.5F, FontStyle.Italic),
                 foreColor: UiHelper.SecondaryGray,
                 margin: UiHelper.Pad(0, 4, 0, 4));
+            lblTip.AutoSize = false;
             lblTip.Dock = DockStyle.Fill;
             lblTip.TextAlign = ContentAlignment.MiddleLeft;
 
