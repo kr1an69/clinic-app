@@ -50,15 +50,20 @@ namespace ClinicManagement.Views
                 Padding = UiHelper.Pad(16, 0, 16, 0)
             };
 
-            var headerLeft = new FlowLayoutPanel
+            var headerLeft = new TableLayoutPanel
             {
                 Dock = DockStyle.Left,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
+                ColumnCount = 2,
+                RowCount = 1,
+                Margin = Padding.Empty,
+                Padding = Padding.Empty,
                 BackColor = Color.Transparent
             };
+            headerLeft.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            headerLeft.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            headerLeft.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             _iconHeader = new IconPictureBox
             {
@@ -68,7 +73,7 @@ namespace ClinicManagement.Views
                 IconSize = UiHelper.S(38),
                 Size = UiHelper.SSize(38, 38),
                 Anchor = AnchorStyles.Left,
-                Margin = UiHelper.Pad(0, 13, 10, 0),
+                Margin = UiHelper.Pad(0, 0, 10, 0),
                 BackColor = Color.Transparent
             };
 
@@ -81,24 +86,30 @@ namespace ClinicManagement.Views
                 Font = new Font("Segoe UI", 12.5F, FontStyle.Bold),
                 TextAlign = ContentAlignment.MiddleLeft,
                 Anchor = AnchorStyles.Left,
-                Margin = UiHelper.Pad(0, 19,0, 0)
+                Margin = Padding.Empty
             };
 
-            headerLeft.Controls.Add(_iconHeader);
-            headerLeft.Controls.Add(_lblHeader);
+            headerLeft.Controls.Add(_iconHeader, 0, 0);
+            headerLeft.Controls.Add(_lblHeader, 1, 0);
             
-            var headerRight = new FlowLayoutPanel
+            var headerRight = new TableLayoutPanel
             {
                 Dock = DockStyle.Right,
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                FlowDirection = FlowDirection.RightToLeft,
-                WrapContents = false,
-                BackColor = Color.Transparent,
+                ColumnCount = 2,
+                RowCount = 1,
+                Margin = Padding.Empty,
+                Padding = Padding.Empty,
+                BackColor = Color.Transparent
             };
+            headerRight.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            headerRight.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            headerRight.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
             
             _btnLogout = UiHelper.CreateButton("Đăng xuất", IconChar.RightFromBracket, UiHelper.DangerRed, minWidth: 105, height: 36, baseIconSize: 16);
-            _btnLogout.Margin = UiHelper.Pad(12, 14, 0, 0);
+            _btnLogout.Anchor = AnchorStyles.Right;
+            _btnLogout.Margin = Padding.Empty;
             _btnLogout.Click += BtnLogout_Click;
             
             string userName = AppSession.CurrentUser?.FullName ?? "Chưa đăng nhập";
@@ -111,10 +122,10 @@ namespace ClinicManagement.Views
                 Font = UiHelper.FontBold,
                 Anchor = AnchorStyles.Right,
                 TextAlign = ContentAlignment.MiddleRight,
-                Margin = UiHelper.Pad(0, 22, 4, 0)
+                Margin = UiHelper.Pad(0, 0, 12, 0)
             };
-            headerRight.Controls.Add(_btnLogout);
-            headerRight.Controls.Add(_lblUserInfo);
+            headerRight.Controls.Add(_lblUserInfo, 0, 0);
+            headerRight.Controls.Add(_btnLogout, 1, 0);
             
             _panelHeader.Controls.Add(headerRight);
             _panelHeader.Controls.Add(headerLeft); 
