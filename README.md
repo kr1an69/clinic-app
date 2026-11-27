@@ -49,7 +49,7 @@ Phù hợp để kiểm thử nhanh trên bất kỳ máy Windows 64-bit nào m�
 
 1. Clone repository về máy:
    ```bash
-   git clone <url-repository>
+   git clone https://github.com/kr1an69/clinic-app
    cd clinic-app
    ```
 2. Mở file `ClinicManagement.sln` bằng IDE và nhấn Run, hoặc chạy trực tiếp bằng terminal:
