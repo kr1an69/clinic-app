@@ -197,7 +197,7 @@ namespace ClinicManagement.Views
             _btnReception.Click += (_, _) =>
             {
                 SetActiveMenuButton(_btnReception);
-                LoadForm(new FormReception(), "Phân hệ 1: Tiếp Nhận, Xếp Hàng && Thống Kê Bệnh Nhân (Thành viên 1)");
+                LoadForm(new FormReception(), "Lễ tân: Tiếp nhận bệnh nhân, xếp hàng && thống kê bệnh nhân.");
             };
 
             _btnQueueMonitor.Click += (_, _) =>
@@ -209,13 +209,13 @@ namespace ClinicManagement.Views
             _btnDoctor.Click += (_, _) =>
             {
                 SetActiveMenuButton(_btnDoctor);
-                LoadForm(new FormDoctor(), "Phân hệ 2: Bác Sĩ Khám && Kê Đơn Thuốc (Thành viên 2)");
+                LoadForm(new FormDoctor(), "Bác sĩ: Khám bệnh, chẩn đoán && kê đơn thuốc.");
             };
 
             _btnPharmacy.Click += (_, _) =>
             {
                 SetActiveMenuButton(_btnPharmacy);
-                LoadForm(new FormPharmacy(), "Phân hệ 3: Thu Phí, Xuất Thuốc, In Ấn && Báo Cáo Kho (Thành viên 3)");
+                LoadForm(new FormPharmacy(), "Dược sĩ / Thu ngân: Thu phí, xuất thuốc, in hóa đơn && báo cáo kho.");
             };
         }
 
@@ -240,7 +240,7 @@ namespace ClinicManagement.Views
                     _btnDoctor.Visible = false;
                     _btnPharmacy.Visible = false;
                     SetActiveMenuButton(_btnReception);
-                    LoadForm(new FormReception(), "Lễ tân: Tiếp nhận bệnh nhân & cấp số thứ tự.");
+                    LoadForm(new FormReception(), "Lễ tân: Tiếp nhận bệnh nhân && cấp số thứ tự.");
                     break;
                 
                 case AppSession.RoleDoctor:
@@ -249,7 +249,7 @@ namespace ClinicManagement.Views
                     _btnDoctor.Visible = true;
                     _btnPharmacy.Visible = false;
                     SetActiveMenuButton(_btnDoctor);
-                    LoadForm(new FormDoctor(), "Bác sĩ: Khám bệnh, chuẩn đoán & kê đơn thuốc");
+                    LoadForm(new FormDoctor(), "Bác sĩ: Khám bệnh, chẩn đoán && kê đơn thuốc.");
                     break;
                 
                 case AppSession.RoleCashier:
@@ -258,7 +258,7 @@ namespace ClinicManagement.Views
                     _btnDoctor.Visible = false;
                     _btnPharmacy.Visible = true;
                     SetActiveMenuButton(_btnPharmacy);
-                    LoadForm(new FormPharmacy(), "Dược sĩ/ Thu ngân: Thu tiền khám, cấp phát thuốc & quản lý kho.");
+                    LoadForm(new FormPharmacy(), "Dược sĩ / Thu ngân: Thu tiền khám, cấp phát thuốc && quản lý kho.");
                     break;
                 
                 default:

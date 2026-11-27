@@ -118,7 +118,7 @@ namespace ClinicManagement.Controllers
                     mr.Diagnosis,
                     COALESCE(mr.ExamFee, 0) AS ExamFee,
                     COALESCE(p.TotalAmount, 0) AS MedicineFee,
-                    p.CreatedAt
+                    datetime(p.CreatedAt, 'localtime') AS CreatedAt
                 FROM Prescriptions p
                 INNER JOIN MedicalRecords mr ON p.MedicalRecordId = mr.Id
                 INNER JOIN Patients pat ON mr.PatientId = pat.Id
@@ -309,7 +309,7 @@ namespace ClinicManagement.Controllers
                     inv.ExamFee,
                     inv.MedicineFee,
                     inv.TotalAmount,
-                    inv.PaidAt
+                    datetime(inv.PaidAt, 'localtime') AS PaidAt
                 FROM Invoices inv
                 INNER JOIN MedicalRecords mr ON inv.MedicalRecordId = mr.Id
                 INNER JOIN Patients pat ON mr.PatientId = pat.Id
@@ -337,7 +337,7 @@ namespace ClinicManagement.Controllers
                     inv.ExamFee,
                     inv.MedicineFee,
                     inv.TotalAmount,
-                    inv.PaidAt
+                    datetime(inv.PaidAt, 'localtime') AS PaidAt
                 FROM Invoices inv
                 INNER JOIN MedicalRecords mr ON inv.MedicalRecordId = mr.Id
                 INNER JOIN Patients pat ON mr.PatientId = pat.Id
