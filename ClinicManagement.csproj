@@ -15,9 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Database\seed_clinic_data.sql">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="Database\seed_clinic_data.sql" />
   </ItemGroup>
 
   <ItemGroup>
