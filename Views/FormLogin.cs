@@ -28,7 +28,8 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Đăng Nhập & Phân Quyền";
-            this.ConfigureAsFixedDialog(baseWidth: 500, baseHeight: 640);
+            this.ConfigureAsFixedDialog(baseWidth: 480, baseHeight: 460);
+            this.StartPosition =  FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(238, 242, 246);
             
             // Thẻ trung tâm
@@ -36,7 +37,7 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.White,
-                Padding = UiHelper.Pad(28, 20, 28, 20)
+                Padding = UiHelper.Pad(28, 24, 28, 24)
             };
 
             cardBox.Paint += (s, e) =>
@@ -50,12 +51,12 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 11,
+                RowCount = 10,
                 BackColor = Color.Transparent
             };
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             
-            for (int i = 0; i < 11; i++)
+            for (int i = 0; i < 10; i++)
             {
                 layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             }
@@ -100,8 +101,9 @@ namespace ClinicManagement.Views
                 Anchor = AnchorStyles.Left | AnchorStyles.Right,
                 Font = new Font("Segoe UI", 10.5F),
                 Margin = UiHelper.Pad(0, 0, 0, 10),
-                Text = "admin"
+                PlaceholderText = "Nhập tên đăng nhập..."
             };
+            _txtUsername.TextChanged += (s, e) => _lblError.Text = string.Empty;
 
             var lblPass = UiHelper.CreateLabel(
                 text: "Mật khẩu:",
@@ -114,8 +116,9 @@ namespace ClinicManagement.Views
                 Font = new Font("Segoe UI", 10.5F),
                 UseSystemPasswordChar = true,
                 Margin = UiHelper.Pad(0, 0, 0, 4),
-                Text = "admin123"
+                PlaceholderText = "Nhập mật khẩu..."
             };
+            _txtPassword.TextChanged += (s, e) => _lblError.Text = string.Empty;
 
             _chkShowPassword = new CheckBox
             {
@@ -135,7 +138,7 @@ namespace ClinicManagement.Views
                 text: string.Empty,
                 font: new Font("Segoe UI", 9F, FontStyle.Italic),
                 foreColor: UiHelper.DangerRed,
-                margin: UiHelper.Pad(0, 0, 0, 6)
+                margin: UiHelper.Pad(0, 0, 0, 8)
             );
             _lblError.Anchor = AnchorStyles.None;
 
@@ -146,34 +149,14 @@ namespace ClinicManagement.Views
                 minWidth: 200,
                 height: 42
             );
-            _btnLogin.Dock = DockStyle.Fill;
+            _btnLogin.Dock = DockStyle.None;
+            _btnLogin.Anchor = AnchorStyles.Left |  AnchorStyles.Right;
             _btnLogin.Margin = Padding.Empty;
             _btnLogin.Click += (s, e) => PerformLogin();
             this.AcceptButton = _btnLogin;
+            this.Shown +=  (s, e) => _txtUsername.Focus();
             
-            // Chọn tài khoản
-            var grpAccounts = UiHelper.CreateGroupBox(
-                title: "Chọn tài khoản:",
-                titleColor: UiHelper.SecondaryGray,
-                margin: UiHelper.Pad(0, 14, 0, 0)
-            );
-
-            var accountGrid = new TableLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                ColumnCount = 2,
-                RowCount = 2,
-            };
-            accountGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            accountGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            accountGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-            accountGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
             
-            accountGrid.Controls.Add(CreateAccountBtn("Quản trị viên", "admin", "admin123", UiHelper.DarkText), 0, 0);
-            accountGrid.Controls.Add(CreateAccountBtn("Lễ tân", "letan", "123", UiHelper.SecondaryGray), 1, 0);
-            accountGrid.Controls.Add(CreateAccountBtn("Bác sĩ", "bacsi", "123", UiHelper.WarningOrange), 0, 1);
-            accountGrid.Controls.Add(CreateAccountBtn("Dược sĩ", "duocsi", "123", UiHelper.SuccessGreen), 1, 1);
-            grpAccounts.Controls.Add(accountGrid);
             
             // Thêm vào bảng
             layout.Controls.Add(iconBox, 0, 0);
@@ -186,33 +169,9 @@ namespace ClinicManagement.Views
             layout.Controls.Add(_chkShowPassword, 0, 7);
             layout.Controls.Add(_lblError, 0, 8);
             layout.Controls.Add(_btnLogin, 0, 9);
-            layout.Controls.Add(grpAccounts, 0, 10);
 
             cardBox.Controls.Add(layout);
             this.Controls.Add(cardBox);
-        }
-
-        private Button CreateAccountBtn(string text, string u, string p, Color c)
-        {
-            var btn = new Button
-            {
-                Text = text,
-                Dock = DockStyle.Fill,
-                Margin = UiHelper.Pad(2),
-                FlatStyle = FlatStyle.Flat,
-                BackColor = c,
-                ForeColor = Color.White,
-                Font = UiHelper.FontSmallBold,
-                Cursor = Cursors.Hand
-            };
-            btn.FlatAppearance.BorderSize = 0;
-            btn.Click += (s, e) =>
-            {
-                _txtUsername.Text = u;
-                _txtPassword.Text = p;
-                _lblError.Text = string.Empty;
-            };
-            return btn;
         }
 
         private void PerformLogin()
@@ -223,6 +182,7 @@ namespace ClinicManagement.Views
             if (string.IsNullOrEmpty(u) || string.IsNullOrEmpty(p))
             {
                 _lblError.Text = "Vui lòng nhập đầy đủ tài khoản và mật khẩu!";
+                _txtUsername.Focus();
                 return;
             }
 
@@ -233,6 +193,7 @@ namespace ClinicManagement.Views
                 {
                     _lblError.Text = "Tên đăng nhập hoặc mật khẩu không chính xác!";
                     _txtPassword.Focus();
+                    _txtPassword.SelectAll();
                     return;
                 }
 
@@ -243,7 +204,7 @@ namespace ClinicManagement.Views
             }
             catch (Exception ex)
             {
-                _lblError.Text = "Lỗi kết nối CSDL" + ex.Message;
+                _lblError.Text = "Lỗi kết nối CSDL: " + ex.Message;
             }
         }
     }
