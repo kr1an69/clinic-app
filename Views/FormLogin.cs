@@ -28,8 +28,8 @@ namespace ClinicManagement.Views
         private void InitializeComponent()
         {
             this.Text = "Đăng Nhập & Phân Quyền";
-            this.ConfigureAsFixedDialog(baseWidth: 480, baseHeight: 420);
-            this.StartPosition =  FormStartPosition.CenterParent;
+            this.ConfigureAsFixedDialog(baseWidth: 480, baseHeight: 460);
+            this.StartPosition =  FormStartPosition.CenterScreen;
             this.BackColor = Color.FromArgb(238, 242, 246);
             
             // Thẻ trung tâm
@@ -37,7 +37,7 @@ namespace ClinicManagement.Views
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.White,
-                Padding = UiHelper.Pad(28, 20, 28, 20)
+                Padding = UiHelper.Pad(28, 24, 28, 24)
             };
 
             cardBox.Paint += (s, e) =>
@@ -138,7 +138,7 @@ namespace ClinicManagement.Views
                 text: string.Empty,
                 font: new Font("Segoe UI", 9F, FontStyle.Italic),
                 foreColor: UiHelper.DangerRed,
-                margin: UiHelper.Pad(0, 0, 0, 6)
+                margin: UiHelper.Pad(0, 0, 0, 8)
             );
             _lblError.Anchor = AnchorStyles.None;
 
@@ -182,6 +182,7 @@ namespace ClinicManagement.Views
             if (string.IsNullOrEmpty(u) || string.IsNullOrEmpty(p))
             {
                 _lblError.Text = "Vui lòng nhập đầy đủ tài khoản và mật khẩu!";
+                _txtUsername.Focus();
                 return;
             }
 
@@ -192,6 +193,7 @@ namespace ClinicManagement.Views
                 {
                     _lblError.Text = "Tên đăng nhập hoặc mật khẩu không chính xác!";
                     _txtPassword.Focus();
+                    _txtPassword.SelectAll();
                     return;
                 }
 
@@ -202,7 +204,7 @@ namespace ClinicManagement.Views
             }
             catch (Exception ex)
             {
-                _lblError.Text = "Lỗi kết nối CSDL" + ex.Message;
+                _lblError.Text = "Lỗi kết nối CSDL: " + ex.Message;
             }
         }
     }
