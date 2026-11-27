@@ -16,6 +16,7 @@ namespace ClinicManagement.Views
         private readonly PharmacyController _controller = new();
         private readonly int? _initialMedicineId;
         private List<Medicine> _medicinesList = new();
+        private bool _hasChanges;
 
         // Control bên phần Thêm thuốc mới
         private TextBox _txtNewCode = null!;
@@ -384,18 +385,19 @@ namespace ClinicManagement.Views
         }
 
         // Tải danh sách thuốc vào ComboBox chọn thuốc bên phần Nhập bổ sung
-        private void LoadMedicinesIntoDropdown()
+        private void LoadMedicinesIntoDropdown(int? preferredMedicineId = null)
         {
             _medicinesList = _controller.GetAllMedicines();
             _cboSelectMedicine.Items.Clear();
 
+            int? targetMedicineId = preferredMedicineId ?? _initialMedicineId;
             int selectedIndex = -1;
             for (int i = 0; i < _medicinesList.Count; i++)
             {
                 var med = _medicinesList[i];
                 _cboSelectMedicine.Items.Add($"[{med.Code}] {med.Name} (Tồn: {med.StockQuantity} {med.Unit})");
 
-                if (_initialMedicineId.HasValue && med.Id == _initialMedicineId.Value)
+                if (targetMedicineId.HasValue && med.Id == targetMedicineId.Value)
                 {
                     selectedIndex = i;
                 }
@@ -517,8 +519,8 @@ namespace ClinicManagement.Views
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
 
-                // Đánh dấu Dialog thành công để form cha biết làm mới danh sách
-                this.DialogResult = DialogResult.OK;
+                // Đánh dấu có thay đổi để form cha làm mới danh sách khi đóng cửa sổ (giữ cửa sổ mở để nhập tiếp)
+                _hasChanges = true;
 
                 // Tải lại danh sách chọn thuốc bên cột nhập kho và xóa trắng form nhập mới
                 LoadMedicinesIntoDropdown();
@@ -584,16 +586,25 @@ namespace ClinicManagement.Views
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
 
-                this.DialogResult = DialogResult.OK;
+                _hasChanges = true;
 
-                // Cập nhật lại danh sách và thông tin trên màn hình
-                LoadMedicinesIntoDropdown();
+                // Cập nhật lại danh sách và giữ nguyên thuốc vừa nhập để xem tồn kho mới
+                LoadMedicinesIntoDropdown(selectedMed.Id);
                 _nudAddQty.Value = 50;
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Lỗi khi nhập bổ sung tồn kho: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            if (_hasChanges)
+            {
+                this.DialogResult = DialogResult.OK;
+            }
+            base.OnFormClosing(e);
         }
     }
 }
