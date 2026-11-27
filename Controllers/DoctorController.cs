@@ -23,7 +23,7 @@ namespace ClinicManagement.Controllers
                     q.QueueNumber,
                     q.QueueDate,
                     q.Status,
-                    q.CreatedAt,
+                    datetime(q.CreatedAt, 'localtime') AS CreatedAt,
                     p.FullName AS PatientName,
                     p.Phone
                 FROM Queues q
@@ -115,7 +115,7 @@ namespace ClinicManagement.Controllers
                     record.QueueId,
                     record.Symptoms,
                     record.Diagnosis,
-                    ExamFee = record.ExamFee > 0 ? record.ExamFee : 50000
+                    ExamFee = record.ExamFee >= 0 ? record.ExamFee : 50000
                 }, transaction);
                 // Luôn tạo bản ghi Prescriptions (kể cả khi không kê thuốc, TotalAmount = 0 để Thu ngân thu tiền công khám và hoàn tất ca khám)
                 double totalMedicineAmount = (details != null && details.Count > 0)
@@ -200,7 +200,7 @@ namespace ClinicManagement.Controllers
                     mr.Symptoms,
                     mr.Diagnosis,
                     mr.ExamFee,
-                    mr.CreatedAt,
+                    datetime(mr.CreatedAt, 'localtime') AS CreatedAt,
                     COALESCE(u.FullName, 'BS.CKI Nguyễn Văn An') AS DoctorName
                 FROM MedicalRecords mr
                 INNER JOIN Patients p ON mr.PatientId = p.Id
@@ -226,7 +226,7 @@ namespace ClinicManagement.Controllers
                     pr.TotalAmount,
                     pr.IsDispensed,
                     CASE WHEN pr.IsDispensed = 1 THEN 'Đã xuất thuốc' ELSE 'Chờ thu phí' END AS DispensedStatus,
-                    pr.CreatedAt
+                    datetime(pr.CreatedAt, 'localtime') AS CreatedAt
                 FROM Prescriptions pr
                 INNER JOIN MedicalRecords mr ON pr.MedicalRecordId = mr.Id
                 INNER JOIN Patients p ON mr.PatientId = p.Id
