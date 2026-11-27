@@ -25,9 +25,17 @@ namespace ClinicManagement.Data
         public static void InitializeDatabase()
         {
             using var conn = GetConnection();
+            using var checkCmd = conn.CreateCommand();
+            checkCmd.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'Users';";
+            long tableCount = Convert.ToInt64(checkCmd.ExecuteScalar());
+            if (tableCount > 0)
+            {
+                return;
+            }
+
             using var cmd = conn.CreateCommand();
 
-            // Khởi tạo bảng CSDL & dữ liệu mẫu từ Embedded Resource (fallback đọc file đĩa)
+            // Khởi tạo bảng CSDL & dữ liệu mẫu ở lần chạy đầu tiên từ Embedded Resource (fallback đọc file đĩa)
             string? sql = LoadSeedSql();
             if (!string.IsNullOrWhiteSpace(sql))
             {
