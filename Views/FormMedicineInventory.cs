@@ -256,7 +256,7 @@ namespace ClinicManagement.Views
                     string.Format("{0:N0} đ", med.UnitPrice),
                     med.StockQuantity,
                     med.MinStockAlert,
-                    med.ExpiryDate ?? string.Empty,
+                    FormatExpiryDate(med.ExpiryDate),
                     statusText
                 );
                 _dgvMedicines.Rows[rowIndex].Tag = med;
@@ -298,6 +298,22 @@ namespace ClinicManagement.Views
             }
 
             return false;
+        }
+
+        private static string FormatExpiryDate(string? expiryDateStr)
+        {
+            if (string.IsNullOrWhiteSpace(expiryDateStr))
+            {
+                return "---";
+            }
+
+            if (DateTime.TryParseExact(expiryDateStr.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime expiryDate) ||
+                DateTime.TryParse(expiryDateStr, out expiryDate))
+            {
+                return expiryDate.ToString("dd/MM/yyyy");
+            }
+
+            return expiryDateStr;
         }
 
         // Tô màu dòng tự động: Đỏ nhạt nếu cận hạn <= 60 ngày, Cam nhạt nếu tồn kho <= mức tối thiểu

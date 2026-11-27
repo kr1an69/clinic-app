@@ -138,11 +138,11 @@ INSERT OR IGNORE INTO Medicines (Id, Code, Name, Unit, UnitPrice, StockQuantity,
 (6, 'BERBERIN', 'Berberin Vàng 100mg', 'Lọ', 25000, 4, 10, '2027-06-30'),
 (7, 'DECGEN', 'Decolgen Cảm Cúm', 'Vỉ', 12000, 3, 10, '2027-09-01'),
 -- Case kiểm thử 2: Thuốc sắp hết hạn sử dụng cận date (TV3 test cảnh báo hạn dùng)
-(8, 'VITAC', 'Vitamin C 1000mg', 'Tuýp', 45000, 50, 10, '2026-11-15');
+(8, 'VITAC', 'Vitamin C 1000mg', 'Tuýp', 45000, 50, 10, date('now', 'localtime', '+20 day'));
 
 -- 2.4 Hàng đợi mẫu hôm nay (Để TV1 test TV Monitor, TV2 test Bác sĩ gọi khám)
 INSERT OR IGNORE INTO Queues (Id, PatientId, QueueNumber, QueueDate, Status) VALUES
-(1, 1, 1, date('now', 'localtime'), 'Examining'),      -- Đang khám (STT 1)
+(1, 1, 1, date('now', 'localtime'), 'PendingPayment'), -- Chờ thu phí (STT 1, đã có bệnh án & đơn thuốc mẫu bên dưới)
 (2, 2, 2, date('now', 'localtime'), 'Waiting'),        -- Đang chờ (STT 2)
 (3, 3, 3, date('now', 'localtime'), 'Waiting');        -- Đang chờ (STT 3)
 

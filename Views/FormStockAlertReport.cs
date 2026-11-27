@@ -298,7 +298,7 @@ namespace ClinicManagement.Views
                     med.Name,
                     med.StockQuantity,
                     med.MinStockAlert,
-                    med.ExpiryDate ?? "---",
+                    FormatExpiryDate(med.ExpiryDate),
                     reason);
                 _dgvAlerts.Rows[rowIndex].Tag = med;
             }
@@ -382,6 +382,22 @@ namespace ClinicManagement.Views
             }
 
             return DateTime.TryParse(med.ExpiryDate, out expiry) && expiry.Date <= DateTime.Today.AddDays(60);
+        }
+
+        private static string FormatExpiryDate(string? expiryDateStr)
+        {
+            if (string.IsNullOrWhiteSpace(expiryDateStr))
+            {
+                return "---";
+            }
+
+            if (DateTime.TryParseExact(expiryDateStr.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var expiry) ||
+                DateTime.TryParse(expiryDateStr, out expiry))
+            {
+                return expiry.ToString("dd/MM/yyyy");
+            }
+
+            return expiryDateStr;
         }
 
         private static string BuildAlertReason(Medicine med)
